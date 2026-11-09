@@ -1,0 +1,2488 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0b0d12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="X4 Books">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<title>X4 Books</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --base: #fff;
+  --ink: #101828; --muted: #566072; --link: #0b62e0;
+  --accent: #0b62e0; --on-accent: #fff; --accent-soft: rgba(11, 98, 224, .09);
+  --ok: #0b6e33; --err: #b42318; --err-soft: #fff4f2; --err-edge: rgba(180, 35, 24, .2);
+  --panel: #fff; --fill: rgba(16, 24, 40, .05);
+  --glass: rgba(255, 255, 255, .72); --glass-strong: rgba(255, 255, 255, .86); --pill: rgba(16, 24, 40, .06);
+  --edge: rgba(16, 24, 40, .09); --line: rgba(16, 24, 40, .08); --track: rgba(16, 24, 40, .09);
+  --shadow: 0 2px 10px rgba(16, 24, 40, .05); --float: 0 8px 26px rgba(16, 24, 40, .14);
+  --veil: rgba(255, 255, 255, .78);
+  --tabs: 62px;
+  --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px); --safe-right: env(safe-area-inset-right, 0px);
+  --bottom-gap: max(var(--safe-bottom), 12px);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --base: #0b0d12;
+    --ink: #f3f6fb; --muted: #aab3c2; --link: #9cc4ff;
+    --accent: #1f6bea; --on-accent: #fff; --accent-soft: rgba(116, 170, 255, .16);
+    --ok: #74e8a6; --err: #ffa89f; --err-soft: #2a1718; --err-edge: rgba(255, 168, 159, .26);
+    --panel: #171a21; --fill: rgba(255, 255, 255, .08);
+    --glass: rgba(32, 36, 46, .7); --glass-strong: rgba(36, 40, 52, .86); --pill: rgba(255, 255, 255, .1);
+    --edge: rgba(255, 255, 255, .1); --line: rgba(255, 255, 255, .09); --track: rgba(255, 255, 255, .13);
+    --shadow: none; --float: 0 10px 30px rgba(0, 0, 0, .5);
+    --veil: rgba(11, 13, 18, .78);
+  }
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+[hidden] { display: none !important; }
+html { font: -apple-system-body; -webkit-text-size-adjust: 100%; background: var(--base); }
+body {
+  margin: 0; color: var(--ink); background: transparent;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  line-height: 1.35; min-height: 100dvh;
+}
+h1, h2, p, ul, ol { margin: 0; padding: 0; }
+ul { list-style: none; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; touch-action: manipulation; cursor: pointer; }
+button:disabled { cursor: default; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 10px; }
+html[data-pointer] :focus-visible { outline: none; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.i { width: 22px; height: 22px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Plain panels: on white there is nothing behind them to blur. */
+.dest, .card, .list, .conn, .hero b { background: var(--panel); border: 1px solid var(--edge); box-shadow: var(--shadow); }
+.btn-outline { background: var(--fill); }
+.input { background: var(--panel); border: 1px solid var(--edge); }
+
+/* Real glass only where content moves underneath. Values are literal: older Safari is unreliable with var() here. */
+.tabs, .action-row {
+  -webkit-backdrop-filter: saturate(170%) blur(22px);
+  backdrop-filter: saturate(170%) blur(22px);
+  background: var(--glass); border: 1px solid var(--edge); box-shadow: var(--float);
+}
+
+/* Layout */
+.top {
+  position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 12px;
+  padding: calc(var(--safe-top) + 12px) calc(var(--safe-right) + 18px) 14px calc(var(--safe-left) + 18px);
+}
+/* Fades out instead of ending in a hard band, so the list dissolves under the title. */
+.top::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background: var(--veil); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  -webkit-mask-image: linear-gradient(#000 55%, transparent); mask-image: linear-gradient(#000 55%, transparent);
+}
+.top h1 { font-size: 1.6rem; font-weight: 600; letter-spacing: -.02em; flex: 1; min-width: 0; }
+.conn { display: inline-flex; align-items: center; gap: 7px; font-size: .8rem; color: var(--muted); white-space: nowrap; min-height: 44px; padding: 0 14px; border-radius: 999px; }
+.conn i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.conn[data-state="online"] i { background: var(--ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 22%, transparent); }
+.conn[data-state="offline"] i, .conn[data-state="blocked"] i { background: var(--err); }
+main {
+  padding: 2px calc(var(--safe-right) + 16px) calc(var(--tabs) + 104px + var(--bottom-gap)) calc(var(--safe-left) + 16px);
+  max-width: 640px; margin: 0 auto;
+}
+section { display: flex; flex-direction: column; gap: 12px; }
+
+/* Controls */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px;
+  padding: 10px 20px; border-radius: 18px; font-weight: 550; text-align: center; transition: transform .12s ease, opacity .12s ease;
+}
+.btn:active:not(:disabled) { transform: scale(.98); opacity: .8; }
+.btn-primary { background: var(--accent); color: var(--on-accent); }
+.bottom .btn-primary { box-shadow: var(--float); }
+.btn-primary:disabled, .bottom .btn-primary:disabled { background: var(--track); color: var(--muted); box-shadow: none; }
+.btn-outline:disabled { color: var(--muted); }
+.btn-wide { width: 100%; }
+.link { min-height: 44px; font-size: .88rem; color: var(--link); align-self: center; padding: 0 8px; }
+.input { width: 100%; min-height: 52px; padding: 10px 16px; border-radius: 16px; color: var(--ink); font: inherit; font-size: max(16px, 1rem); }
+.input::placeholder { color: var(--muted); }
+.input:focus { outline: none; border-color: var(--accent); }
+
+/* Destination */
+.dest { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 66px; padding: 10px 16px; border-radius: 20px; text-align: left; transition: opacity .12s ease; }
+.dest:active:not(:disabled) { opacity: .7; }
+.dest:disabled { opacity: .6; }
+.dest > .i:first-child { color: var(--link); }
+.segmented { display: flex; gap: 4px; padding: 4px; border-radius: 16px; background: var(--fill); }
+.segmented button { flex: 1; min-height: 44px; border-radius: 12px; color: var(--muted); font-weight: 550; }
+.segmented button[aria-pressed="true"] { background: var(--panel); color: var(--ink); box-shadow: var(--shadow); }
+.dest-text { flex: 1; min-width: 0; }
+.dest-label { display: block; font-size: .78rem; color: var(--muted); }
+.dest-value { display: block; font-weight: 500; overflow-wrap: anywhere; }
+.chev { color: var(--muted); width: 16px; height: 16px; }
+
+/* Notices */
+.card { border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.alert { background: var(--err-soft); border-color: var(--err-edge); }
+.alert h2 { font-size: 1.02rem; font-weight: 600; color: var(--err); display: flex; gap: 8px; align-items: flex-start; }
+.steps { padding-left: 1.3em; display: flex; flex-direction: column; gap: 7px; font-size: .92rem; }
+.steps b { font-weight: 600; }
+.note { font-size: .88rem; color: var(--muted); }
+.tip { flex-direction: row; align-items: flex-start; gap: 6px; padding: 12px 6px 12px 16px; font-size: .88rem; }
+.tip p { flex: 1; align-self: center; }
+.icon-btn { width: 44px; height: 44px; flex: none; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: var(--muted); }
+.icon-btn:active { background: var(--track); }
+
+/* Queue */
+.head { display: flex; align-items: center; justify-content: space-between; min-height: 44px; margin-top: 2px; padding: 0 4px; }
+.head h2 { font-size: 1rem; font-weight: 600; }
+.head .link { margin-right: -8px; }
+.list { border-radius: 20px; overflow: hidden; }
+.row { display: flex; align-items: flex-start; gap: 12px; padding: 12px 6px 12px 14px; }
+.row + .row { border-top: 1px solid var(--line); }
+.row-group { padding: 18px 14px 8px; font-size: .83rem; font-weight: 600; color: var(--muted); border-top: 1px solid var(--line); }
+.badge {
+  flex: none; width: 42px; min-height: 42px; display: flex; align-items: center; justify-content: center;
+  background: var(--accent-soft); color: var(--link); border-radius: 12px; font-size: .6rem; font-weight: 650; letter-spacing: .04em;
+}
+.row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.row-name { font-weight: 500; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.row-sub { font-size: .83rem; color: var(--muted); display: flex; align-items: flex-start; gap: 5px; }
+.row-sub .i { width: 15px; height: 15px; margin-top: .12em; stroke-width: 2.2; }
+.row[data-status="done"] .row-sub { color: var(--ok); }
+.row[data-status="error"] .row-sub, .row[data-status="exists"] .row-sub { color: var(--err); }
+.bar { height: 5px; margin-top: 7px; background: var(--track); border-radius: 999px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 999px; transition: width .2s linear; }
+.row-actions { display: flex; align-items: center; flex: none; }
+.row-actions .text-btn { min-height: 44px; padding: 0 8px; font-size: .88rem; font-weight: 550; color: var(--link); }
+.row-tap { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 8px 14px; text-align: left; }
+.row-tap .i:first-child { color: var(--link); }
+.row-tap:active { background: var(--track); }
+li + li > .row-tap, li + li > .row-file { border-top: 1px solid var(--line); }
+.row-file { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 8px 14px; }
+.grow { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.size { font-size: .83rem; color: var(--muted); white-space: nowrap; }
+
+/* States */
+.state { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 26px 16px; }
+.state h2 { font-size: 1.05rem; font-weight: 600; }
+.state p { color: var(--muted); font-size: .93rem; max-width: 30em; }
+.hero { position: relative; width: 104px; height: 112px; margin-bottom: 8px; }
+.hero i { position: absolute; right: 6px; top: 2px; width: 62px; height: 84px; border-radius: 14px; transform: rotate(9deg); background: var(--accent); }
+.hero b { position: absolute; left: 8px; bottom: 2px; width: 68px; height: 92px; border-radius: 15px; display: flex; align-items: center; justify-content: center; color: var(--ink); }
+.hero .i { width: 30px; height: 30px; }
+.skeleton i { display: block; height: 56px; }
+.skeleton i + i { border-top: 1px solid var(--line); }
+.skeleton i::after { content: ""; display: block; height: 12px; margin: 22px 16px; border-radius: 6px; background: var(--track); animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .4; } }
+
+/* Path bar */
+.path { display: flex; align-items: center; gap: 4px; }
+.path .grow { font-weight: 500; }
+
+/* Floating bottom controls */
+.bottom {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+  padding: 0 calc(var(--safe-right) + 14px) var(--bottom-gap) calc(var(--safe-left) + 14px);
+  max-width: 640px; margin: 0 auto;
+}
+.bottom > * { pointer-events: auto; }
+.action { display: flex; flex-direction: column; gap: 6px; }
+.action-buttons { display: flex; gap: 8px; }
+.action-buttons .btn { flex: 1; min-width: 0; }
+.action-buttons .pick-icon-only { flex: none; width: 52px; padding: 0; background: var(--panel); }
+.pick-icon-only span { display: none; }
+.action-row { display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 16px; border-radius: 22px; }
+.action-text { flex: 1; min-width: 0; font-weight: 550; }
+.action-text small { display: block; font-weight: 400; font-size: .76rem; color: var(--muted); }
+.action-row .btn { min-height: 44px; padding: 6px 14px; background: var(--track); border: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; font-size: .9rem; border-radius: 14px; }
+.tabs { display: flex; gap: 4px; padding: 5px; border-radius: 999px; }
+.tab { position: relative; flex: 1; min-width: 0; min-height: calc(var(--tabs) - 12px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-size: .63rem; white-space: nowrap; color: var(--muted); border-radius: 999px; transition: background .15s ease; }
+.tab .i { width: 21px; height: 21px; }
+.tab[aria-current="page"] { color: var(--link); background: var(--pill); font-weight: 550; }
+.count { position: absolute; top: 3px; left: calc(50% + 8px); min-width: 17px; height: 17px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: var(--on-accent); font-size: .64rem; font-weight: 600; line-height: 17px; text-align: center; }
+
+/* Sheet */
+dialog {
+  margin: auto 0 0; width: 100%; max-width: 100%; height: min(82dvh, 680px); padding: 0;
+  border: 1px solid var(--edge); border-bottom: 0; border-radius: 28px 28px 0 0; color: var(--ink);
+  background: var(--base); box-shadow: var(--float);
+  -webkit-backdrop-filter: saturate(170%) blur(30px); backdrop-filter: saturate(170%) blur(30px);
+}
+dialog[open] { display: flex; flex-direction: column; }
+dialog::backdrop { background: rgba(10, 16, 30, .28); }
+dialog .list { box-shadow: none; }
+.sheet-head { display: flex; align-items: center; gap: 4px; padding: 10px calc(var(--safe-right) + 8px) 2px calc(var(--safe-left) + 20px); }
+.sheet-head h2 { flex: 1; font-size: 1.08rem; font-weight: 600; }
+.sheet-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 10px; padding: 4px calc(var(--safe-right) + 16px) 12px calc(var(--safe-left) + 16px); }
+.sheet-foot { padding: 8px calc(var(--safe-right) + 16px) calc(var(--safe-bottom) + 12px) calc(var(--safe-left) + 16px); }
+.form-row { display: flex; gap: 8px; }
+.form-row .input { flex: 1; min-width: 0; }
+.err-text { color: var(--err); font-size: .88rem; }
+@media (min-width: 640px) { dialog { max-width: 560px; margin: auto; border-radius: 28px; border-bottom: 1px solid var(--edge); } }
+
+/* Solid panels when blur is unavailable or unwanted. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root { --glass: var(--panel); --glass-strong: var(--panel); --veil: var(--base); }
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root { --glass: var(--panel); --glass-strong: var(--panel); --veil: var(--base); }
+  .tabs, .action-row, dialog, .top::before { -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+/* Settings */
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.row.setting { align-items: center; gap: 10px; min-height: 56px; padding: 6px 8px 6px 14px; position: relative; background: var(--panel); }
+.row.setting .row-name { font-weight: 450; }
+.row.setting.tall { flex-direction: column; align-items: stretch; gap: 6px; padding: 10px 14px; }
+.setting-value { flex: none; max-width: 46%; color: var(--muted); font-size: .9rem; text-align: right; overflow-wrap: anywhere; }
+.row.setting select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; font-size: 16px; border: 0; cursor: pointer; }
+.stepper { flex: none; display: flex; align-items: center; }
+.stepper output { min-width: 34px; text-align: center; font-variant-numeric: tabular-nums; }
+.stepper .icon-btn { color: var(--link); }
+.stepper .icon-btn:disabled { color: var(--track); }
+.row-edit { flex: 1; min-width: 0; min-height: 44px; text-align: left; }
+.row-edit small { display: block; color: var(--muted); font-size: .83rem; }
+.form-title { font-size: 1rem; font-weight: 600; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field span { font-size: .83rem; color: var(--muted); }
+.toast { position: fixed; left: 50%; bottom: calc(var(--tabs) + var(--bottom-gap) + 86px); transform: translateX(-50%); z-index: 8; max-width: calc(100vw - 32px); padding: 9px 16px; border-radius: 999px; background: var(--ink); color: var(--base); font-size: .88rem; text-align: center; box-shadow: var(--float); }
+.toast[data-bad="1"] { background: var(--err); color: #fff; }
+@media (prefers-color-scheme: dark) { .toast[data-bad="1"] { color: #1a0f10; } }
+/* Confirmation */
+#ask { height: fit-content; }
+.ask-body { display: flex; flex-direction: column; gap: 16px; padding: 22px calc(var(--safe-right) + 16px) calc(env(safe-area-inset-bottom) + 16px) calc(var(--safe-left) + 16px); }
+#askText { font-size: 1.02rem; font-weight: 500; overflow-wrap: anywhere; }
+.ask-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+/* Screenshots */
+.shot-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.shot { position: relative; display: block; aspect-ratio: 3 / 5; overflow: hidden; border: 1px solid var(--edge); border-radius: 8px; background: #fff; }
+.shot img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.shot span { position: absolute; right: 4px; bottom: 4px; padding: 1px 6px; border-radius: 999px; background: #111; color: #fff; font-size: .68rem; }
+#shotView { height: 92dvh; }
+.shot-full { display: block; width: 100%; height: 100%; object-fit: contain; }
+/* Covers */
+.cover-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 12px; margin: 0; padding: 0; list-style: none; }
+.cover-card { display: block; width: 100%; text-align: left; }
+.cover-shot { position: relative; display: block; aspect-ratio: 3 / 5; border: 1px solid var(--edge); border-radius: 12px; background: #fff url(covers.png) no-repeat; background-size: 305% 404%; }
+.cover-card[aria-pressed="true"] .cover-shot { outline: 2.5px solid var(--link); outline-offset: 2px; }
+.cover-tick { position: absolute; top: 8px; right: 8px; display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--on-accent); }
+.cover-tick .i { width: 15px; height: 15px; stroke-width: 2.6; }
+.cover-name { display: block; margin-top: 8px; font-size: .88rem; font-weight: 500; }
+.cover-grid > li { position: relative; }
+.cover-shot.is-pic { overflow: hidden; background-image: none; }
+.cover-shot.is-pic img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.cover-del { position: absolute; top: 2px; right: 2px; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; }
+.cover-del .i { box-sizing: content-box; width: 14px; height: 14px; padding: 6px; border: 1px solid var(--edge); border-radius: 50%; background: var(--panel); color: var(--ink); stroke-width: 2.4; }
+.cover-restore { grid-column: 1 / -1; text-align: center; }
+/* Book reviews */
+.review-text { width: 100%; height: 38dvh; min-height: 150px; padding: 12px 14px; border-radius: 16px; border: 1px solid var(--edge); background: var(--panel); color: var(--ink); font: inherit; font-size: max(16px, 1rem); line-height: 1.4; resize: none; }
+.review-text:focus { outline: none; border-color: var(--accent); }
+.shelf-review { height: 130px; min-height: 130px; }
+.head-save { min-height: 44px; padding: 0 8px; color: var(--link); font-weight: 600; }
+.head-save:disabled { color: var(--muted); }
+.has-review { display: block; color: var(--link); font-size: .78rem; }
+/* Shelf */
+.shelf-count { font-size: .85rem; color: var(--muted); }
+#shelfEmpty:empty { display: none; }
+.shelf-chip-row { display: flex; align-items: center; gap: 2px; margin-top: 14px; }
+.shelf-chip-row .shelf-name-input { margin-right: 4px; }
+.shelf-chips { flex: 1; min-width: 0; display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; margin-left: -16px; padding-left: 16px; }
+.add-new-shelf { background: var(--fill); color: var(--ink); }
+.shelf-chips::-webkit-scrollbar { display: none; }
+.shelf-chip { flex: none; min-height: 44px; padding: 0 15px; border-radius: 999px; background: var(--fill); font-size: .9rem; white-space: nowrap; }
+.shelf-chip[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); font-weight: 550; }
+.shelf-card .add-shelf { position: absolute; top: 0; right: 0; color: #fff; }
+.pick-row { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 6px 14px; cursor: pointer; }
+.pick-row + .pick-row { border-top: 1px solid var(--line); }
+.pick-row input { flex: none; width: 22px; height: 22px; margin: 0; accent-color: var(--accent); }
+.shelf-head { gap: 6px; }
+.shelf-name { flex: 1; min-width: 0; min-height: 44px; text-align: left; font-size: 1rem; font-weight: 600; overflow-wrap: anywhere; }
+.shelf-name-input { flex: 1; min-width: 0; min-height: 44px; }
+.view-switch { flex: none; display: flex; }
+.view-switch .icon-btn[aria-pressed="true"] { color: var(--link); background: var(--pill); }
+.shelf-line { display: flex; align-items: center; gap: 10px; min-height: 64px; padding: 6px 4px 6px 12px; background: var(--panel); position: relative; }
+.shelf-line + .shelf-line { border-top: 1px solid var(--line); }
+.shelf-line.dragging { z-index: 2; box-shadow: var(--float); }
+.shelf-thumb { flex: none; width: 34px; height: 50px; border-radius: 4px; }
+.shelf-line .row-edit span { font-weight: 500; overflow-wrap: anywhere; }
+.shelf-line .shelf-month { flex: none; margin: 0; min-height: 0; max-width: 34%; text-align: right; }
+.shelf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 12px; }
+.shelf-card { position: relative; min-width: 0; }
+.shelf-card.dragging { z-index: 3; }
+.shelf-card.dragging .shelf-cover { box-shadow: var(--float); }
+.shelf-cover { display: flex; flex-direction: column; justify-content: space-between; gap: 8px; width: 100%; aspect-ratio: 2 / 3; padding: 14px 12px 12px; border-radius: 12px; color: #fff; text-align: left; box-shadow: var(--shadow); overflow: hidden; }
+.shelf-cover b { font-size: 1.02rem; font-weight: 600; line-height: 1.22; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 6; overflow: hidden; padding-right: 22px; }
+.shelf-cover small { font-size: .78rem; opacity: .86; overflow-wrap: anywhere; }
+.shelf-card .grip { position: absolute; top: 0; right: 0; color: #fff; }
+.shelf-month { display: block; margin-top: 5px; font-size: .82rem; color: var(--muted); text-align: center; min-height: 1.2em; }
+#devList li.book-li { display: flex; align-items: center; }
+#devList li.book-li > .row-tap { flex: 1; min-width: 0; }
+#devList li.book-li + li, #devList li + li.book-li { border-top: 1px solid var(--line); }
+#devList li.book-li > .row-tap, #devList li + li > .row-tap { border-top: 0; }
+.add-shelf { color: var(--link); }
+.center { text-align: center; }
+.switch { position: relative; flex: none; width: 51px; height: 44px; display: flex; align-items: center; }
+.switch input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.switch i { display: block; position: relative; width: 51px; height: 31px; border-radius: 999px; background: var(--track); transition: background .15s ease; }
+.switch i::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .3); transition: transform .15s ease; }
+.switch input:checked + i { background: var(--accent); }
+.switch input:checked + i::after { transform: translateX(20px); }
+.switch input:disabled + i { opacity: .5; }
+.switch input:focus-visible + i { outline: 2px solid var(--accent); outline-offset: 2px; }
+.grip { width: 44px; height: 44px; flex: none; display: flex; align-items: center; justify-content: center; color: var(--muted); touch-action: none; cursor: grab; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 7"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 3.5L2.5 20h19L12 3.5zM12 10v4.5M12 17.5v.01"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a1 1 0 011-1h5l2 2.5h9a1 1 0 011 1V18a1 1 0 01-1 1H4a1 1 0 01-1-1z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V6M6 11.5L12 5l6 6.500"/><path d="M4 21h16"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M5 4.500A1.500 1.500 0 016.500 3H19v15H6.500A1.500 1.500 0 005 19.500zM5 19.500A1.500 1.500 0 006.500 21H19v-3"/></symbol>
+  <symbol id="i-grip" viewBox="0 0 24 24"><path d="M5 8h14M5 12h14M5 16h14"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 8h9M19 8h1M4 16h1M11 16h9"/><circle cx="16" cy="8" r="2.500"/><circle cx="8" cy="16" r="2.500"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 17l4.500-4.500 3.500 3.500 3-3 5 5"/><circle cx="15" cy="8" r="1.500"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.500h6V7M6.500 7l1 13h9l1-13M10 11v5M14 11v5"/></symbol>
+  <symbol id="i-read" viewBox="0 0 24 24"><path d="M12 6.500C10 5 7.500 4.500 3.500 4.500v14c4 0 6.500.5 8.500 2 2-1.500 4.500-2 8.500-2v-14c-4 0-6.500.5-8.500 2zM12 6.500v14"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.500"/><rect x="13" y="4" width="7" height="7" rx="1.500"/><rect x="4" y="13" width="7" height="7" rx="1.500"/><rect x="13" y="13" width="7" height="7" rx="1.500"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M8.500 6.500H20M8.500 12H20M8.500 17.500H20M4 6.500h.01M4 12h.01M4 17.500h.01"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 10-.8 5M20 5v6h-6"/></symbol>
+</svg>
+
+<header class="top">
+  <h1 id="title">Загрузка</h1>
+  <div class="conn" id="conn" data-state="checking" role="status"><i aria-hidden="true"></i><span id="connText">Ищем читалку…</span></div>
+</header>
+
+<main>
+  <div id="offline" class="card alert" role="alert" hidden style="margin-bottom:12px">
+    <h2><span id="offTitle">Читалка не отвечает</span></h2>
+    <ol class="steps" id="offSteps">
+      <li>На читалке откройте <b>«Передача файлов»</b> и не выходите из этого экрана.</li>
+      <li>Выберите <b>«Создать точку доступа»</b>. Если читалка и iPhone в одной сети Wi‑Fi, можно выбрать «Подключиться к сети».</li>
+      <li>Для точки доступа: на iPhone откройте Настройки → Wi‑Fi и подключитесь к сети <b>CrossPoint-Reader</b>. Если iPhone предупредит, что в сети нет интернета, всё равно оставайтесь в ней.</li>
+    </ol>
+    <p class="note" id="offNote">Проверяем связь каждые несколько секунд.</p>
+    <form class="form-row" id="hostForm" hidden>
+      <label class="sr" for="host">Адрес читалки</label>
+      <input class="input" id="host" placeholder="192.168.4.1" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <button class="btn btn-outline" type="submit">ОК</button>
+    </form>
+    <button class="btn btn-primary btn-wide" id="recheck">Проверить снова</button>
+  </div>
+
+  <section id="tab-upload">
+    <div class="segmented" role="group" aria-label="Что загружаем">
+      <button id="kindBooks">Книги</button>
+      <button id="kindSleep">Обложки</button>
+    </div>
+    <input class="sr" id="pick" type="file" multiple tabindex="-1" aria-hidden="true" accept=".epub,.txt,.md,.xtc,.xtch,application/epub+zip,text/plain,text/markdown">
+    <input class="sr" id="pickSleep" type="file" multiple tabindex="-1" aria-hidden="true" accept="image/jpeg,image/png,image/bmp,.bmp">
+
+    <div class="card" id="skipped" hidden></div>
+    <div class="card tip" id="tip" hidden>
+      <p>Чтобы открывать как приложение: кнопка «Поделиться» в Safari → «На экран „Домой“». Значок сработает, только когда на читалке открыта «Передача файлов».</p>
+      <button class="icon-btn" id="tipClose" aria-label="Скрыть подсказку"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>
+    </div>
+
+    <div class="state" id="empty">
+      <div class="hero" aria-hidden="true"><i></i><b><svg class="i"><use href="#i-book"/></svg></b></div>
+      <h2 id="emptyTitle">Книг пока нет</h2>
+      <p id="emptyText">Выберите файлы из приложения «Файлы»: EPUB, TXT, MD или XTC. Можно сразу несколько.</p>
+    </div>
+
+    <div class="head" id="queueHead" hidden>
+      <h2 id="queueTitle">Очередь</h2>
+      <button class="link" id="clearDone" hidden>Убрать готовые</button>
+    </div>
+    <ul class="list" id="queue" hidden aria-label="Очередь загрузки"></ul>
+  </section>
+
+  <section id="tab-device" hidden>
+    <div class="stack" id="shelfBox" hidden>
+      <div class="shelf-chip-row">
+        <div class="shelf-chips" id="shelfChips" role="group" aria-label="Полки"></div>
+        <input class="input shelf-name-input" id="shelfNameInput" maxlength="40" autocomplete="off" aria-label="Название полки" hidden>
+        <button class="icon-btn add-new-shelf" id="shelfAdd" aria-label="Добавить полку"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></button>
+      </div>
+      <div id="shelfEmpty"></div>
+      <ul class="shelf-grid" id="shelfList" aria-label="Полка" hidden></ul>
+      <button class="link" id="shelfDelete" hidden>Удалить полку</button>
+      <div class="head"><h2>Книги на карте</h2></div>
+    </div>
+    <div id="devState"></div>
+    <ul class="list" id="devList" hidden aria-label="Файлы на читалке"></ul>
+    <p class="note" id="devInfo"></p>
+  </section>
+
+  <section id="tab-covers" hidden>
+    <div id="coversState"></div>
+    <ul class="cover-grid" id="coversGrid" aria-label="Виды обложек" hidden></ul>
+  </section>
+
+  <section id="tab-home" hidden>
+    <div class="path" id="setNav" hidden>
+      <button class="icon-btn" id="setBack" aria-label="Назад к настройкам"><svg class="i" aria-hidden="true"><use href="#i-back"/></svg></button>
+      <div class="grow" id="setNavTitle"></div>
+    </div>
+    <div id="setState"></div>
+    <ul class="list" id="setRoot" hidden aria-label="Разделы настроек"></ul>
+    <ul class="list" id="setList" hidden></ul>
+    <div class="stack" id="viewExtra" hidden></div>
+  </section>
+
+</main>
+
+<div class="bottom">
+  <div class="action" id="action" hidden>
+    <div class="action-row" id="actionRun" hidden>
+      <div class="action-text"><span id="runText"></span><small>Не блокируйте экран и не сворачивайте приложение.</small></div>
+      <button class="btn btn-outline" id="stopBtn">Остановить</button>
+    </div>
+    <div class="action-buttons" id="actionButtons">
+      <button class="btn btn-primary btn-wide" id="startBtn" hidden></button>
+      <button class="btn btn-primary btn-wide" id="pickBtn"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg><span>Выбрать книги</span></button>
+    </div>
+  </div>
+  <nav class="tabs" aria-label="Разделы">
+    <button class="tab" data-tab="upload" aria-current="page"><svg class="i" aria-hidden="true"><use href="#i-up"/></svg>Загрузка<span class="count" id="tabCount" hidden aria-hidden="true"></span></button>
+    <button class="tab" data-tab="device"><svg class="i" aria-hidden="true"><use href="#i-book"/></svg>Полка</button>
+    <button class="tab" data-tab="covers"><svg class="i" aria-hidden="true"><use href="#i-image"/></svg>Обложки</button>
+    <button class="tab" data-tab="home"><svg class="i" aria-hidden="true"><use href="#i-sliders"/></svg>Настройки</button>
+  </nav>
+</div>
+
+<dialog id="review" aria-labelledby="reviewTitle">
+  <div class="sheet-head">
+    <h2 id="reviewTitle">Рецензия</h2>
+    <button class="icon-btn" id="reviewClose" aria-label="Закрыть"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="sheet-body">
+    <p class="note" id="reviewBook"></p>
+    <label class="sr" for="reviewText">Текст рецензии</label>
+    <textarea class="review-text" id="reviewText" placeholder="Что вы думаете об этой книге?" autocapitalize="sentences" autocomplete="off" disabled></textarea>
+    <p class="note">Чтобы наговорить голосом, нажмите микрофон на клавиатуре iPhone.</p>
+    <div class="field" id="reviewShots" hidden><span>Скриншоты</span><div class="shot-grid"></div></div>
+    <p class="err-text" id="reviewErr" role="alert" hidden></p>
+    <button class="link" id="reviewDelete" hidden>Удалить рецензию</button>
+  </div>
+</dialog>
+
+<dialog id="shotView" aria-labelledby="shotViewTitle">
+  <div class="sheet-head">
+    <h2 id="shotViewTitle">Скриншот</h2>
+    <button class="icon-btn" id="shotViewClose" aria-label="Закрыть"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="sheet-body"><img class="shot-full" id="shotViewImg" alt="Скриншот"></div>
+</dialog>
+<dialog id="ask" aria-labelledby="askText">
+  <div class="ask-body">
+    <p id="askText"></p>
+    <div class="ask-row">
+      <button class="btn btn-outline" id="askNo">Отмена</button>
+      <button class="btn btn-primary" id="askYes">Удалить</button>
+    </div>
+  </div>
+</dialog>
+<dialog id="shelfEdit" aria-labelledby="shelfEditTitle">
+  <div class="sheet-head">
+    <h2 id="shelfEditTitle">Книга на полке</h2>
+    <button class="icon-btn" id="shelfEditClose" aria-label="Закрыть"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="sheet-body">
+    <label class="field"><span>Название книги</span><input class="input" id="shelfTitle" maxlength="60" autocomplete="off"></label>
+    <label class="field"><span>Автор</span><input class="input" id="shelfAuthor" maxlength="60" autocomplete="off"></label>
+    <label class="field" id="shelfStatusField"><span>Статус</span><select class="input" id="shelfStatus"><option value="unread">Не прочитано</option><option value="read">Прочитано</option></select></label>
+    <label class="field" id="shelfMonthField"><span>Когда прочитана</span><select class="input" id="shelfMonth"></select></label>
+    <label class="field"><span>Рецензия</span><textarea class="review-text shelf-review" id="shelfReview" placeholder="Что вы думаете об этой книге?" autocapitalize="sentences" autocomplete="off" disabled></textarea></label>
+    <p class="note">Чтобы наговорить голосом, нажмите микрофон на клавиатуре iPhone.</p>
+    <div class="field" id="shelfShots" hidden><span>Скриншоты</span><div class="shot-grid"></div></div>
+    <p class="err-text" id="shelfErr" role="alert" hidden></p>
+    <button class="link" id="shelfRemove">Убрать с полки</button>
+  </div>
+</dialog>
+
+<dialog id="shelfNew" aria-labelledby="shelfNewTitle">
+  <div class="sheet-head">
+    <h2 id="shelfNewTitle">Новая полка</h2>
+    <button class="head-save" id="shelfNewCreate">Создать</button>
+    <button class="icon-btn" id="shelfNewClose" aria-label="Закрыть"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="sheet-body">
+    <label class="field"><span>Название полки</span><input class="input" id="shelfNewName" maxlength="40" autocomplete="off"></label>
+    <p class="err-text" id="shelfNewErr" role="alert" hidden></p>
+    <div class="form-title">Какие книги поставить</div>
+    <div id="shelfNewState"></div>
+    <div class="list" id="shelfNewList" hidden></div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<div class="sr" id="live" aria-live="polite"></div>
+
+<script>
+'use strict';
+const $ = (s) => document.querySelector(s);
+const icon = (name) => `<svg class="i" aria-hidden="true"><use href="#i-${name}"/></svg>`;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+const BOOK_FORMATS = ['epub', 'txt', 'md', 'xtc', 'xtch', 'bmp'];
+// Same limits as the firmware's own file manager: 4 KB frames keep the ESP32 stable.
+const CHUNK = 4096;
+const MAX_BUFFERED = CHUNK * 2;
+// The reader confirms every 64 KB; never get further ahead than two confirmations.
+const ACK_WINDOW = 128 * 1024;
+const STALL_MS = 30000;
+
+const store = {
+  get(k) { try { return localStorage.getItem('xu.' + k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem('xu.' + k, v); } catch { /* private mode */ } },
+};
+
+/* ---------- Language ---------- */
+const LANG = store.get('lang') || 'en';
+document.documentElement.lang = LANG;
+// Russian text is the key; English is the default language, looked up here.
+const EN = {"Отмена":"Cancel","Удалить":"Delete","Убрать «{0}» из списка?":"Remove “{0}” from the list?","Своя обложка":"My cover","Удалить: {0}":"Delete: {0}","Удалить эту обложку с читалки?":"Delete this cover from the reader?","Обложка удалена":"Cover deleted","Вернуть убранные: {0}":"Bring back removed: {0}","Скриншоты":"Screenshots","Скриншот":"Screenshot","На читалке откройте «Передачу файлов» и повторите.":"Open File Transfer on the reader and try again.","Поиск по книге":"Search in a book","Слова из книги":"Words from the book","Найти":"Search","Открыто на читалке":"Opened on the reader","Чтобы снова пользоваться приложением, откройте на читалке «Передачу файлов».":"To use the app again, open File Transfer on the reader.","Готово":"Done","Ищем книги на карте…":"Looking for books on the card…","На карте нет книг EPUB.":"There are no EPUB books on the card.","Не удалось получить список книг.":"Could not get the list of books.","Нет связи с читалкой. Откройте на ней «Передачу файлов».":"No connection. Open File Transfer on the reader.","Идёт загрузка книг. Поиск заработает после неё.":"Books are uploading. Search will work when that finishes.","Скачиваем книгу… {0}%":"Downloading the book… {0}%","Ищем… раздел {0} из {1}":"Searching… section {0} of {1}","Найдено: {0}":"Found: {0}","Показаны первые {0}. Уточните запрос.":"Showing the first {0}. Try more specific words.","Ничего не найдено.":"Nothing found.","Не удалось прочитать эту книгу.":"Could not read this book.","Не удалось скачать книгу. Проверьте связь с читалкой.":"Could not download the book. Check the connection to the reader.","Для поиска нужна iOS 16.4 или новее.":"Search needs iOS 16.4 or later.","Открываем на читалке…":"Opening on the reader…","Читалка не открыла книгу. Возможно, нужна новая прошивка.":"The reader did not open the book. It may need newer firmware.","Читалка не приняла запрос.":"The reader did not accept the request.","Связь прервалась. Посмотрите на читалку: если книга не открылась, вернитесь в «Передачу файлов» и повторите.":"The connection dropped. Check the reader: if the book did not open, go back to File Transfer and try again.","Раздел {0}":"Section {0}","Виды обложек":"Cover kinds","Обложки недоступны":"Covers unavailable","Чтение":"Reading","Внизу страницы":"Bottom of page","Включены свои обложки":"Your covers are on","Не удалось прочитать картинку.":"Could not read this picture.","Один экран":"Dashboard","Несколько экранов":"Screens","Вид главной":"Home style","Полки":"Shelves","Открыть":"Open","дни":"days read","подряд":"day streak","мин/день":"min a day","На полке пока пусто":"This shelf is empty","Библиотека":"Library","Передача":"Transfer","Читать":"Resume","Выбрать":"Select","Вверх":"Up","Вниз":"Down","глава 3 из 12":"chapter 3 of 12","{0} ч":"{0} h","Книги":"Books","Обложки":"Covers","Что загружаем":"What to upload","Выбрать обложки":"Choose covers","Обложек пока нет":"No covers yet","Выберите картинки JPG, PNG или BMP. Можно сразу несколько.":"Choose JPG, PNG or BMP images. You can pick several at once.","Не добавлено: {0}. Обложками могут быть только JPG, PNG и BMP.":"Not added: {0}. Covers can only be JPG, PNG or BMP.","Не прочитано":"Not read","Новая полка":"New shelf","Добавить полку":"Add shelf","Какие книги поставить":"Books to add","Ищем книги на карте…":"Looking for books on the card…","Не удалось найти книги":"Couldn't find books","Читалка не ответила. Попробуйте ещё раз.":"The reader didn't respond. Try again.","На карте нет книг":"No books on the card","Сначала загрузите книги на вкладке «Загрузка».":"Add books from the Upload tab first.","Введите название полки.":"Enter a shelf name.","Удалить полку":"Delete shelf","Удалить полку «{0}»?":"Delete shelf \"{0}\"?","Полка создана":"Shelf created","Полка удалена":"Shelf deleted","Полки":"Shelves","На этой полке пока нет книг":"No books on this shelf yet","Нажмите + на книге ниже, чтобы поставить её сюда.":"Tap + on a book below to add it here.","Показать обложками":"Show covers","Показать списком":"Show as list","Переименовать полку {0}":"Rename shelf {0}","Название полки":"Shelf name","Список есть только в приложении, на читалке полка всегда с обложками.":"List view is app-only. The reader always shows covers.","Моя полка":"My shelf","Планирую":"Want to read","Прочитана":"Finished","Статус":"Status","Вторая страница читалки покажет полку в таком же порядке. Перетащите книгу за полоски, чтобы изменить его.":"The reader's second page shows your shelf in this order. Drag a book by the bars to change it. Tap a cover to edit it.","Месяц":"Month","Полка":"Shelf","книга":"book","книги":"books","книг":"books","Полка пуста":"Your shelf is empty","Нажмите + рядом с книгой ниже, чтобы поставить её на полку.":"Tap + next to a book below to add it to your shelf.","На читалке видны первые {0}. Перетащите книгу за полоски, чтобы изменить порядок.":"The reader shows the first {0}. Drag a book by the bars to reorder. Tap a cover to edit it.","Поставить {0} на полку":"Add {0} to shelf","Убрать {0} с полки":"Remove {0} from shelf","Добавлено на полку":"Added to shelf","Убрано с полки":"Removed from shelf","Полка сохранена":"Shelf saved","Не удалось сохранить полку. Проверьте связь с читалкой.":"Couldn't save the shelf. Check the connection to the reader.","Книга на полке":"Book on shelf","Название книги":"Book title","Автор":"Author","Когда прочитана":"Finished in","Без даты":"No date","Убрать с полки":"Remove from shelf","Изменить: {0}":"Edit: {0}","Поставить {0} {1}":"Move {0} {1}","{0}: место {1} из {2}":"{0}: position {1} of {2}","Книги на карте":"Books on the card","Введите название книги.":"Enter a book title.","файл":"file","файла":"files","файлов":"files","{0} Б":"{0} B","{0} КБ":"{0} KB","{0} МБ":"{0} MB","Вся карта":"Whole card","На связи":"Connected","Ищем читалку…":"Looking for reader…","Нет связи":"Not connected","Эта страница не может связаться с читалкой":"This page can't reach the reader","Страница открыта по защищённому адресу (https), а Safari запрещает таким страницам обращаться к устройствам по http. Откройте приложение с самой читалки: http://crosspoint.local/book-uploader/index.html":"This page was opened over https, and Safari doesn't let such pages talk to devices over http. Open the app from the reader itself: http://crosspoint.local/book-uploader/index.html","точка доступа":"hotspot","сеть Wi‑Fi":"Wi‑Fi network","Читалка {0} · {1} · {2} · прошивка {3}":"Reader {0} · {1} · {2} · firmware {3}","Читалка на связи":"Reader connected","Нет связи с читалкой":"Reader not connected","Папка на читалке: {0}. Изменить":"Folder on reader: {0}. Change","<div class=\"list skeleton\" role=\"status\" aria-label=\"Загрузка списка\"><i></i><i></i><i></i></div>":"<div class=\"list skeleton\" role=\"status\" aria-label=\"Loading list\"><i></i><i></i><i></i></div>","Повторить":"Retry","Папка":"Folder","Список недоступен":"List unavailable","Он появится, когда читалка снова будет на связи.":"It will appear when the reader is connected again.","Есть рецензия":"Has a review","Открыть рецензию":"Open review","Написать рецензию":"Write a review","Здесь пока пусто":"Nothing here yet","Загрузите сюда книги на вкладке «Загрузка».":"Add books here from the Upload tab.","Не удалось открыть папку":"Couldn't open this folder","Читалка не ответила. Проверьте, что на ней открыта «Передача файлов».":"The reader didn't respond. Check that File Transfer is open on it.","Папка выбрана: {0}":"Folder selected: {0}","Открыть папку":"Open folder","Вложенных папок нет":"No subfolders","Можно загрузить сюда или создать новую папку.":"You can upload here or create a new folder.","Введите название папки.":"Enter a folder name.","В названии нельзя использовать символы \\ / : * ? \" < > | и точку в начале.":"A name can't contain \\ / : * ? \" < > | or start with a dot.","Папка {0} создана":"Folder {0} created","Папка с таким названием уже есть.":"A folder with this name already exists.","Читалка не смогла создать папку.":"The reader couldn't create the folder.","Нет связи с читалкой. Папка не создана.":"Reader not connected. The folder wasn't created.","Не добавлено: {0}. Читалка открывает только EPUB, TXT, MD, XTC и BMP.":"Not added: {0}. The reader only opens EPUB, TXT, MD, XTC and BMP.","Добавлено в очередь: {0}":"Added to queue: {0}","в очереди":"queued","{0}% · {1} из {2}":"{0}% · {1} of {2}","Подключаемся…":"Connecting…","{0} · загружено":"{0} · uploaded","Такой файл уже есть в этой папке":"This file is already in this folder","Отменено":"Cancelled","Загрузка {0}":"Uploading {0}","Убрать {0} из очереди":"Remove {0} from queue","Отменить загрузку {0}":"Cancel upload of {0}","Повторить загрузку {0}":"Retry upload of {0}","Заменить":"Replace","Заменить файл {0} на читалке":"Replace {0} on the reader","Очередь · {0}":"Queue · {0}","Загрузить {0}":"Upload {0}","Загружаем {0} из {1}":"Uploading {0} of {1}","Читалка занята другой загрузкой. Подождите немного и повторите.":"The reader is busy with another upload. Wait a moment and retry.","Не удалось записать файл. Возможно, карта памяти заполнена.":"Couldn't write the file. The memory card may be full.","Не удалось создать файл. Проверьте карту памяти и название папки.":"Couldn't create the file. Check the memory card and the folder name.","Читалка не принимает такое имя файла. Переименуйте его и повторите.":"The reader doesn't accept this file name. Rename it and retry.","В эту папку загружать нельзя. Выберите другую.":"You can't upload to this folder. Choose another one.","Читалка сообщила об ошибке. Попробуйте ещё раз.":"The reader reported an error. Try again.","Загружено: {0}":"Uploaded: {0}","Отменено: {0}":"Cancelled: {0}","Файл {0} уже есть на читалке":"{0} is already on the reader","Связь прервалась. Незаконченный файл удалён, можно повторить.":"Connection lost. The unfinished file was removed, you can retry.","Ошибка: {0}":"Error: {0}","связь прервалась, начнётся заново":"connection lost, will restart","Не удалось прочитать файл на iPhone. Выберите его заново.":"Couldn't read the file on this iPhone. Choose it again.","Готово. Загружено: {0}":"Done. Uploaded: {0}","Календарь чтения":"Reading calendar","Сколько читали по дням за год":"How much you read each day this year","Календарь":"Calendar","Текущая книга":"Current book","Обложка и прогресс":"Cover and progress","Книга":"Book","Прочитано":"Finished","Обложки прочитанных книг":"Covers of finished books","Кнопки":"Buttons","Нельзя скрыть: через них открывается «Передача файлов»":"Can't be hidden: they open File Transfer","{0}: позиция {1} из {2}":"{0}: position {1} of {2}","Показывать блок {0}":"Show {0} block","выше":"up","ниже":"down","Поставить блок {0} {1}":"Move {0} block {1}","Настройка недоступна":"Setting unavailable","Она появится, когда читалка снова будет на связи.":"It will appear when the reader is connected again.","Нужна новая прошивка":"New firmware needed","Эта версия прошивки пока не умеет менять главный экран. После обновления настройка появится здесь.":"This firmware can't change the home screen yet. The setting will appear here after an update.","Не удалось загрузить настройку":"Couldn't load this setting","Сохранено. Выйдите из «Передачи файлов», и главный экран читалки обновится.":"Saved. Leave File Transfer and the reader's home screen will update.","Не удалось сохранить. Проверьте, что на читалке открыта «Передача файлов», и повторите.":"Couldn't save. Check that File Transfer is open on the reader and retry.","Wi‑Fi-сети":"Wi‑Fi networks","OPDS-каталоги":"OPDS catalogs","Шрифты":"Fonts","Другое":"Other","Сохранено":"Saved","Настройка сохранена":"Setting saved","Не сохранилось. Проверьте связь с читалкой.":"Not saved. Check the connection to the reader.","Настройка не сохранилась":"Setting not saved","Уменьшить: {0}":"Decrease: {0}","Увеличить: {0}":"Increase: {0}","Задано, оставьте пустым":"Set, leave blank","Не задано":"Not set","Очистить":"Clear","Настройки недоступны":"Settings unavailable","Они появятся, когда читалка снова будет на связи.":"They will appear when the reader is connected again.","Идёт загрузка книг":"Books are uploading","Настройки откроются, когда она закончится.":"Settings will open when it finishes.","Не удалось загрузить настройки":"Couldn't load settings","Подключались последней":"Last connected","С паролем":"With password","Без пароля":"No password","Сохранённых сетей нет":"No saved networks","Новая сеть":"New network","Изменить сеть":"Edit network","Удалить сеть":"Delete network","Название сети (только 2,4 ГГц)":"Network name (2.4 GHz only)","Пароль":"Password","Каталогов нет":"No catalogs","Новый каталог":"New catalog","Изменить каталог":"Edit catalog","Удалить каталог":"Delete catalog","Название":"Name","Адрес каталога":"Catalog address","Логин":"Username","Не удалось загрузить список":"Couldn't load the list","Читалка не ответила.":"The reader didn't respond.","Удалено":"Deleted","Не удалось удалить.":"Couldn't delete.","Нет связи с читалкой.":"Reader not connected.","Заполните форму ниже, чтобы добавить.":"Fill in the form below to add one.","Оставьте пустым, чтобы не менять":"Leave blank to keep it","Сохранить":"Save","Отменить изменение":"Cancel editing","Заполните поле «{0}».":"Fill in \"{0}\".","Достигнут предел: сначала удалите лишнее.":"Limit reached: delete something first.","Читалка не приняла эти данные.":"The reader didn't accept this data.","Загрузка из каталогов":"Catalog downloads","Не удалось загрузить шрифты":"Couldn't load fonts","Установленные шрифты":"Installed fonts","{0} пт":"{0} pt","Все размеры":"All sizes","Удалить шрифт {0}":"Delete font {0}","Удалить шрифт «{0}»?":"Delete font \"{0}\"?","Своих шрифтов нет":"No custom fonts","Читалка использует встроенные шрифты.":"The reader is using its built-in fonts.","Добавить шрифт":"Add font","Нужны файлы .cpfont, .ttf или .otf.":"Choose .cpfont, .ttf or .otf files.","Нужны файлы .cpfont.":"Choose .cpfont files.","Выберите файлы одного шрифта.":"Choose files from one font.","Загружаем {0} из {1}…":"Uploading {0} of {1}…","Не загрузилось файлов: {0}":"Files not uploaded: {0}","Шрифт загружен":"Font uploaded","Подойдут файлы .cpfont, .ttf и .otf.":"Use .cpfont, .ttf or .otf files.","Подойдут файлы .cpfont. Если файлов несколько, все должны быть от одного шрифта.":"Use .cpfont files. If there are several, they must all be from one font.","Место":"Place","Человек":"Person","Заведение":"Institution","Картина":"Artwork","Музыка":"Music","Читалка пока не сообщает главу: нужна новая прошивка. Выберите главу вручную.":"The reader can't report the chapter yet: new firmware is needed. Choose the chapter by hand.","На читалке не открыта книга. Выберите главу вручную.":"No book is open on the reader. Choose the chapter by hand.","На читалке открыта «{0}». Материалы пока есть только для «Бремени страстей человеческих».":"\"{0}\" is open on the reader. Materials are only available for Of Human Bondage so far.","Синхронизировано с читалкой: глава {0}":"Synced with the reader: chapter {0}","Синхронизировано, глава {0}":"Synced, chapter {0}","Не удалось определить номер главы. Выберите её вручную.":"Couldn't work out the chapter number. Choose it by hand.","Читалка не ответила. Показываю последнюю выбранную главу.":"The reader didn't respond. Showing the last chosen chapter.","Идёт загрузка книг. Главу можно будет обновить после неё.":"Books are uploading. You can update the chapter after that.","Нет связи с читалкой. Показываю уже загруженное.":"Reader not connected. Showing what's already loaded.","Загружаем картинки: {0} из {1}":"Loading pictures: {0} of {1}","Всё к этой главе загружено":"Everything for this chapter is loaded","Материалы не загрузились":"Materials didn't load","Проверьте связь с читалкой и что на карте есть папка atlas.":"Check the connection to the reader and that the atlas folder is on the card.","В этой главе ничего не отмечено":"Nothing marked in this chapter","Здесь нет упоминаний, которым нужны пояснения.":"There are no mentions here that need explaining.","Сохранить можно будет, когда закончится загрузка книг.":"You can save once the book upload finishes.","Не удалось открыть рецензию. Проверьте связь с читалкой.":"Couldn't open the review. Check the connection to the reader.","Закрыть без сохранения?":"Close without saving?","Рецензия удалена":"Review deleted","Рецензия сохранена":"Review saved","Удалить рецензию на эту книгу?":"Delete the review of this book?","Не удалось удалить. Проверьте связь с читалкой.":"Couldn't delete. Check the connection to the reader.","Загрузка":"Upload","На читалке":"On reader","Главный экран":"Home screen","Настройки":"Settings","Глава":"Chapter","Читалка не отвечает":"Reader isn't responding","На читалке откройте":"On the reader, open","«Передача файлов»":"File Transfer","и не выходите из этого экрана.":"and stay on that screen.","Выберите":"Choose","«Создать точку доступа»":"Create Hotspot",". Если читалка и iPhone в одной сети Wi‑Fi, можно выбрать «Подключиться к сети».":". If the reader and iPhone are on the same Wi‑Fi network, you can choose Join Network instead.","Для точки доступа: на iPhone откройте Настройки → Wi‑Fi и подключитесь к сети":"For a hotspot: on the iPhone, open Settings → Wi‑Fi and join",". Если iPhone предупредит, что в сети нет интернета, всё равно оставайтесь в ней.":". If the iPhone warns that there's no internet, stay on that network anyway.","Проверяем связь каждые несколько секунд.":"Checking the connection every few seconds.","Адрес читалки":"Reader address","ОК":"OK","Проверить снова":"Check again","Папка на читалке":"Folder on reader","Выбрать книги":"Choose books","Другие файлы и картинки BMP":"Other files and BMP images","Чтобы открывать как приложение: кнопка «Поделиться» в Safari → «На экран „Домой“». Значок сработает, только когда на читалке открыта «Передача файлов».":"To open it like an app: Share in Safari → Add to Home Screen. The icon only works while File Transfer is open on the reader.","Книг пока нет":"No books yet","Выберите файлы из приложения «Файлы»: EPUB, TXT, MD или XTC. Можно сразу несколько.":"Choose files from the Files app: EPUB, TXT, MD or XTC. You can pick several at once.","Очередь":"Queue","Убрать готовые":"Clear finished","Загружать в эту папку":"Upload to this folder","Язык, часы, переназначение кнопок, очистку кэша и обновление прошивки пока можно менять только на самой читалке.":"Language, clock, button mapping, cache clearing and firmware updates can only be changed on the reader for now.","Бремя страстей человеческих":"Of Human Bondage","Сомерсет Моэм":"W. Somerset Maugham","Перетащите блок за полоски справа, чтобы изменить порядок.":"Drag a block by the bars on the right to reorder it.","Вернуть обычный вид":"Restore default layout","Не блокируйте экран и не сворачивайте приложение.":"Keep the screen on and the app open.","Остановить":"Stop","Сохранить на читалку":"Save to reader","Файлы":"Files","Экран":"Display","Рецензия":"Review","Текст рецензии":"Review text","Чтобы наговорить голосом, нажмите микрофон на клавиатуре iPhone.":"To dictate, tap the microphone on the iPhone keyboard.","Удалить рецензию":"Delete review","Куда загружать":"Upload to","Название новой папки":"New folder name","Создать":"Create","Загружать сюда":"Upload here","Скрыть подсказку":"Hide tip","Очередь загрузки":"Upload queue","На уровень выше":"Up one level","Обновить список":"Refresh list","Файлы на читалке":"Files on reader","Назад к настройкам":"Back to settings","Разделы настроек":"Settings sections","Предыдущая глава":"Previous chapter","Следующая глава":"Next chapter","О чём речь в этой главе":"What this chapter mentions","Блоки главного экрана читалки":"Reader home screen blocks","Разделы":"Sections","Глава: узнать, где я читаю, и загрузить материалы":"Chapter: find where I'm reading and load materials","Закрыть":"Close","Что вы думаете об этой книге?":"What do you think of this book?","Новая папка":"New folder","Вложенные папки":"Subfolders","Книги X4":"X4 Books","Язык приложения":"App language","{0} «{1}»?":"{0} \"{1}\"?"};
+function tr(key, ...args) {
+  const text = LANG === 'en' && EN[key] !== undefined ? EN[key] : key;
+  return text.replace(/\{(\d+)\}/g, (_, i) => args[i]);
+}
+function localizeStatic() {
+  if (LANG !== 'en') return;
+  const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  while (walk.nextNode()) {
+    const n = walk.currentNode;
+    const k = n.nodeValue.trim();
+    if (k && EN[k] !== undefined && !n.parentElement.closest('script,style')) n.nodeValue = n.nodeValue.replace(k, () => EN[k]);
+  }
+  for (const el of document.querySelectorAll('[aria-label],[placeholder]')) {
+    for (const a of ['aria-label', 'placeholder']) {
+      const v = el.getAttribute(a);
+      if (v && EN[v] !== undefined) el.setAttribute(a, EN[v]);
+    }
+  }
+}
+localizeStatic();
+
+function plural(n, one, few, many) {
+  if (LANG === 'en') return n === 1 ? one : many;
+  const a = n % 100, b = n % 10;
+  if (a > 10 && a < 20) return many;
+  return b === 1 ? one : b >= 2 && b <= 4 ? few : many;
+}
+const files = (n) => `${n} ${plural(n, tr('файл'), tr('файла'), tr('файлов'))}`;
+function fmtSize(b) {
+  const f = (v, d) => v.toLocaleString(LANG === 'en' ? 'en-US' : 'ru-RU', { maximumFractionDigits: d });
+  if (b < 1024) return tr('{0} Б', b);
+  if (b < 1048576) return tr('{0} КБ', f(b / 1024, 0));
+  return tr('{0} МБ', f(b / 1048576, 1));
+}
+const extOf = (n) => { const i = n.lastIndexOf('.'); return i > 0 ? n.slice(i + 1).toLowerCase() : ''; };
+const joinPath = (p, n) => (p === '/' ? '/' + n : p + '/' + n);
+const parentOf = (p) => { const i = p.lastIndexOf('/'); return i <= 0 ? '/' : p.slice(0, i); };
+// iOS can hand over decomposed Unicode, which e-ink fonts draw badly; ':' would break the START message.
+const safeName = (n) => n.normalize('NFC').replace(/[:\\/]/g, '-');
+function announce(t) { $('#live').textContent = t; }
+
+/* ---------- Confirmation ---------- */
+// An in-app window: embedded browsers can silently refuse the system confirm().
+function askConfirm(text) {
+  return new Promise((done) => {
+    const d = $('#ask');
+    $('#askText').textContent = text;
+    $('#askYes').onclick = () => { done(true); d.close(); };
+    $('#askNo').onclick = () => d.close();
+    d.onclose = () => done(false);
+    d.showModal();
+  });
+}
+
+/* ---------- Connection ---------- */
+const reader = { base: '', state: 'checking', info: null, served: false, fails: 0, timer: 0 };
+
+function candidates() {
+  const list = [];
+  if (location.protocol === 'http:') list.push('');
+  const saved = store.get('host');
+  if (saved) list.push('http://' + saved);
+  if (!reader.served) list.push('http://crosspoint.local', 'http://192.168.4.1');
+  return [...new Set(list)];
+}
+async function fetchStatus(base) {
+  const c = new AbortController();
+  const t = setTimeout(() => c.abort(), 4000);
+  try {
+    const r = await fetch(base + '/api/status', { cache: 'no-store', signal: c.signal });
+    if (!r.ok) return null;
+    const j = await r.json();
+    return j && (j.firmwareFamily || j.version) ? j : null;
+  } catch { return null; } finally { clearTimeout(t); }
+}
+function wsUrl() {
+  const u = new URL(reader.base || location.origin);
+  return `ws://${u.hostname}:${Number(u.port || 80) + 1}/`;
+}
+function setConn(state, info) {
+  const was = reader.state;
+  reader.state = state;
+  if (info) reader.info = info;
+  $('#conn').dataset.state = state;
+  $('#connText').textContent = state === 'online' ? tr('На связи') : state === 'checking' ? tr('Ищем читалку…') : tr('Нет связи');
+  $('#offline').hidden = !(state === 'offline' || state === 'blocked');
+  $('#hostForm').hidden = reader.served || state !== 'offline';
+  if (state === 'blocked') {
+    $('#offTitle').textContent = tr('Эта страница не может связаться с читалкой');
+    $('#offSteps').hidden = true;
+    $('#recheck').hidden = true;
+    $('#offNote').textContent = tr('Страница открыта по защищённому адресу (https), а Safari запрещает таким страницам обращаться к устройствам по http. Откройте приложение с самой читалки: http://crosspoint.local/book-uploader/index.html');
+  }
+  if (state === 'online' && reader.info) {
+    const i = reader.info;
+    const mode = i.mode === 'AP' ? tr('точка доступа') : tr('сеть Wi‑Fi');
+    $('#devInfo').textContent = tr('Читалка {0} · {1} · {2} · прошивка {3}', i.device || '', mode, i.ip || '', i.version || '');
+  } else { $('#devInfo').textContent = ''; }
+  if (was !== state) {
+    if (state === 'online') { announce(tr('Читалка на связи')); if (tab === 'device') loadDevice(); if (tab === 'home' || tab === 'covers') refreshSettings(); }
+    if (state === 'offline') { announce(tr('Нет связи с читалкой')); showDevOffline(); renderSettings(); }
+  }
+  renderBar();
+}
+async function check() {
+  clearTimeout(reader.timer);
+  if (location.protocol === 'https:') { setConn('blocked'); return; }
+  if (runner.active || epubBusy || document.hidden) return;
+  // First address to answer wins, so a dead address never delays a live one.
+  const cands = candidates();
+  const found = await new Promise((done) => {
+    let left = cands.length;
+    for (const base of cands) {
+      fetchStatus(base).then((info) => {
+        if (info) done({ base, info });
+        else if (--left === 0) done(null);
+      });
+    }
+  });
+  if (found) {
+    reader.base = found.base;
+    if (found.base === '') reader.served = true;
+    reader.fails = 0;
+    setConn('online', found.info);
+  } else {
+    reader.fails++;
+    // One missed answer is normal while the reader is busy.
+    if (reader.state !== 'online' || reader.fails >= 2) setConn('offline');
+  }
+  reader.timer = setTimeout(check, reader.state === 'online' ? 6000 : 3000);
+}
+$('#recheck').addEventListener('click', () => { setConn('checking'); reader.fails = 0; check(); });
+$('#hostForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const h = $('#host').value.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+  if (!h) return;
+  store.set('host', h);
+  setConn('checking');
+  check();
+});
+document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
+
+/* ---------- What to upload ---------- */
+const SLEEP_FORMATS = ['jpg', 'jpeg', 'png', 'bmp'];
+const SLEEP_DIR = '/sleep';
+let uploadKind = store.get('uploadKind') === 'sleep' ? 'sleep' : 'books';
+function renderUploadKind() {
+  const isSleep = uploadKind === 'sleep';
+  $('#kindBooks').setAttribute('aria-pressed', isSleep ? 'false' : 'true');
+  $('#kindSleep').setAttribute('aria-pressed', isSleep ? 'true' : 'false');
+  const label = isSleep ? tr('Выбрать обложки') : tr('Выбрать книги');
+  $('#pickBtn span').textContent = label;
+  $('#pickBtn').setAttribute('aria-label', label);
+  $('#emptyTitle').textContent = isSleep ? tr('Обложек пока нет') : tr('Книг пока нет');
+  $('#emptyText').textContent = isSleep ? tr('Выберите картинки JPG, PNG или BMP. Можно сразу несколько.') : tr('Выберите файлы из приложения «Файлы»: EPUB, TXT, MD или XTC. Можно сразу несколько.');
+}
+function setUploadKind(kind) {
+  uploadKind = kind;
+  store.set('uploadKind', kind);
+  $('#skipped').hidden = true;
+  renderUploadKind();
+  renderBar();
+}
+$('#kindBooks').addEventListener('click', () => setUploadKind('books'));
+$('#kindSleep').addEventListener('click', () => setUploadKind('sleep'));
+
+/* ---------- Device listing ---------- */
+async function listDir(path) {
+  const c = new AbortController();
+  const t = setTimeout(() => c.abort(), 12000);
+  try {
+    const r = await fetch(`${reader.base}/api/files?path=${encodeURIComponent(path)}`, { cache: 'no-store', signal: c.signal });
+    if (!r.ok) throw new Error(String(r.status));
+    // The app's own folder on the card is not something to browse or upload into.
+    const appDir = reader.served ? location.pathname.split('/')[1] : '';
+    const list = (await r.json()).filter((i) => !(path === '/' && i.isDirectory && i.name === appDir));
+    return list.sort((a, b) => (b.isDirectory - a.isDirectory) || a.name.localeCompare(b.name, 'ru', { numeric: true }));
+  } finally { clearTimeout(t); }
+}
+function setState(box, list, kind, opts = {}) {
+  box.textContent = '';
+  list.hidden = kind !== 'list';
+  if (kind === 'list') return;
+  if (kind === 'loading') {
+    box.innerHTML = tr('<div class="list skeleton" role="status" aria-label="Загрузка списка"><i></i><i></i><i></i></div>');
+    return;
+  }
+  const s = document.createElement('div');
+  s.className = 'state';
+  const h = document.createElement('h2');
+  h.textContent = opts.title;
+  const p = document.createElement('p');
+  p.textContent = opts.text;
+  s.append(h, p);
+  if (opts.retry) {
+    const b = document.createElement('button');
+    b.className = 'btn btn-outline';
+    b.textContent = tr('Повторить');
+    b.addEventListener('click', opts.retry);
+    s.append(b);
+  }
+  box.append(s);
+}
+
+const dev = { items: null, token: 0, stale: true };
+function showDevOffline() {
+  dev.items = null;
+  $('#shelfBox').hidden = true;
+  setState($('#devState'), $('#devList'), 'msg', { title: tr('Список недоступен'), text: tr('Он появится, когда читалка снова будет на связи.') });
+}
+async function loadDevice() {
+  dev.stale = false;
+  const token = ++dev.token;
+  dev.items = null;
+  if (reader.state !== 'online') { showDevOffline(); return; }
+  setState($('#devState'), $('#devList'), 'loading');
+  try {
+    const items = (await findBooks('/', 0, [])).sort((a, b) => a.name.localeCompare(b.name, 'ru', { numeric: true }));
+    rev.have = await listReviews();
+    await loadShelf();
+    if (token !== dev.token) return;
+    dev.items = items;
+    renderShelf();
+    renderDevItems();
+  } catch {
+    if (token !== dev.token) return;
+    setState($('#devState'), $('#devList'), 'msg', { title: tr('Не удалось получить список книг.'), text: tr('Читалка не ответила. Проверьте, что на ней открыта «Передача файлов».'), retry: loadDevice });
+  }
+}
+
+/* ---------- Queue ---------- */
+const queue = [];
+let nextId = 1;
+const runner = { active: false, stop: false, current: null };
+
+// Sleep screens: the reader only shows BMP from /sleep, so every picture becomes a full-screen grey BMP.
+// The time suffix keeps photos from the iPhone library, often all named image.jpg, from replacing each other.
+const sleepName = (name) => `${safeName(name).replace(/\.[^.]*$/, '').slice(0, 24)}-${Date.now().toString(36)}${nextId}.bmp`;
+async function toSleepBmp(file) {
+  const W = 480;
+  const H = 800;
+  const url = URL.createObjectURL(file);
+  try {
+    const img = new Image();
+    await new Promise((done, fail) => { img.onload = done; img.onerror = fail; img.src = url; });
+    const canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const scale = Math.max(W / img.naturalWidth, H / img.naturalHeight);
+    const w = img.naturalWidth * scale;
+    const h = img.naturalHeight * scale;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, W, H);
+    ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
+    const px = ctx.getImageData(0, 0, W, H).data;
+    const offset = 14 + 40 + 256 * 4;
+    const buf = new ArrayBuffer(offset + W * H);
+    const v = new DataView(buf);
+    v.setUint16(0, 0x4d42, true);
+    v.setUint32(2, buf.byteLength, true);
+    v.setUint32(10, offset, true);
+    v.setUint32(14, 40, true);
+    v.setInt32(18, W, true);
+    v.setInt32(22, H, true);
+    v.setUint16(26, 1, true);
+    v.setUint16(28, 8, true);
+    v.setUint32(46, 256, true);
+    for (let i = 0; i < 256; i++) v.setUint32(54 + i * 4, (i << 16) | (i << 8) | i, true);
+    const out = new Uint8Array(buf, offset);
+    // BMP rows run bottom to top; grey uses the same weights as the firmware.
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        const p = (y * W + x) * 4;
+        out[(H - 1 - y) * W + x] = (77 * px[p] + 150 * px[p + 1] + 29 * px[p + 2]) >> 8;
+      }
+    }
+    return new File([buf], 'sleep.bmp', { type: 'image/bmp' });
+  } finally { URL.revokeObjectURL(url); }
+}
+async function prepareSleep(it) {
+  try {
+    it.file = await toSleepBmp(it.file);
+    it.size = it.file.size;
+    it.convert = false;
+    return true;
+  } catch {
+    it.status = 'error';
+    it.error = tr('Не удалось прочитать картинку.');
+    updateRow(it);
+    return false;
+  }
+}
+const SLEEP_CUSTOM = 2; // SLEEP_SCREEN_MODE::CUSTOM in the firmware
+const SLEEP_COVER_CUSTOM = 4;
+async function useCustomSleep() {
+  try {
+    const r = await fetch(reader.base + '/api/settings?keys=sleepScreen', { cache: 'no-store' });
+    const [cur] = await r.json();
+    if (cur.value === SLEEP_CUSTOM || cur.value === SLEEP_COVER_CUSTOM) return;
+    const saved = await fetch(reader.base + '/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sleepScreen: SLEEP_CUSTOM }) });
+    if (!saved.ok) return;
+    const local = findSetting('sleepScreen');
+    if (local) local.value = SLEEP_CUSTOM;
+    toast(tr('Включены свои обложки'));
+  } catch { /* the picture is on the card; the mode can still be picked in Settings */ }
+}
+
+function addFiles(list) {
+  const rejected = [];
+  let added = 0;
+  for (const file of list) {
+    const ext = extOf(file.name);
+    const isSleep = uploadKind === 'sleep';
+    if (!(isSleep ? SLEEP_FORMATS : BOOK_FORMATS).includes(ext)) { rejected.push(file.name); continue; }
+    if (queue.some((q) => q.file.name === file.name && q.file.size === file.size && q.status !== 'done')) continue;
+    const it = { id: nextId++, dest: isSleep ? SLEEP_DIR : '/', file, convert: isSleep, name: isSleep ? sleepName(file.name) : safeName(file.name), ext: isSleep ? 'bmp' : ext, size: file.size, status: 'queued', sent: 0, note: '', error: '', overwrite: false, abort: null, row: null };
+    queue.push(it);
+    $('#queue').append(makeRow(it));
+    added++;
+  }
+  const box = $('#skipped');
+  if (rejected.length) {
+    box.textContent = '';
+    const p = document.createElement('p');
+    p.className = 'note';
+    p.textContent = tr(uploadKind === 'sleep' ? 'Не добавлено: {0}. Обложками могут быть только JPG, PNG и BMP.' : 'Не добавлено: {0}. Читалка открывает только EPUB, TXT, MD, XTC и BMP.', rejected.join(', '));
+    box.append(p);
+    box.hidden = false;
+  } else { box.hidden = true; }
+  if (added) announce(tr('Добавлено в очередь: {0}', files(added)));
+  renderQueue();
+}
+for (const id of ['pick', 'pickSleep']) {
+  $('#' + id).addEventListener('change', (e) => { addFiles([...e.target.files]); e.target.value = ''; });
+}
+$('#pickBtn').addEventListener('click', () => $(uploadKind === 'sleep' ? '#pickSleep' : '#pick').click());
+
+function makeRow(it) {
+  const li = document.createElement('li');
+  li.className = 'row';
+  li.innerHTML = '<span class="badge" aria-hidden="true"></span><div class="row-main"><div class="row-name"></div><div class="row-sub"></div><div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" hidden><i></i></div></div><div class="row-actions"></div>';
+  li.querySelector('.badge').textContent = it.ext.toUpperCase();
+  li.querySelector('.row-name').textContent = it.name;
+  it.row = li;
+  updateRow(it);
+  return li;
+}
+function statusText(it) {
+  switch (it.status) {
+    case 'queued': return `${fmtSize(it.size)} · ${it.note || tr('в очереди')}`;
+    case 'uploading': return it.sent ? tr('{0}% · {1} из {2}', percent(it), fmtSize(it.sent), fmtSize(it.size)) : tr('Подключаемся…');
+    case 'done': return tr('{0} · загружено', fmtSize(it.size));
+    case 'exists': return tr('Такой файл уже есть в этой папке');
+    case 'cancelled': return tr('Отменено');
+    default: return it.error;
+  }
+}
+const percent = (it) => (it.size ? Math.min(99, Math.floor((it.sent / it.size) * 100)) : 0);
+
+function textBtn(label, aria, fn) {
+  const b = document.createElement('button');
+  b.className = 'text-btn';
+  b.textContent = label;
+  b.setAttribute('aria-label', aria);
+  b.addEventListener('click', fn);
+  return b;
+}
+function closeBtn(aria, fn) {
+  const b = document.createElement('button');
+  b.className = 'icon-btn';
+  b.innerHTML = icon('x');
+  b.setAttribute('aria-label', aria);
+  b.addEventListener('click', fn);
+  return b;
+}
+function updateRow(it) {
+  const r = it.row;
+  r.dataset.status = it.status;
+  const sub = r.querySelector('.row-sub');
+  const pre = it.status === 'done' ? icon('check') : it.status === 'error' || it.status === 'exists' ? icon('warn') : '';
+  sub.innerHTML = pre + '<span></span>';
+  sub.querySelector('span').textContent = statusText(it);
+
+  const bar = r.querySelector('.bar');
+  bar.hidden = it.status !== 'uploading';
+  bar.setAttribute('aria-label', tr('Загрузка {0}', it.name));
+  updateBar(it);
+
+  const box = r.querySelector('.row-actions');
+  box.textContent = '';
+  const remove = () => closeBtn(tr('Убрать {0} из очереди', it.name), () => removeItem(it));
+  if (it.status === 'uploading') box.append(closeBtn(tr('Отменить загрузку {0}', it.name), () => it.abort && it.abort()));
+  else if (it.status === 'error' || it.status === 'cancelled') box.append(textBtn(tr('Повторить'), tr('Повторить загрузку {0}', it.name), () => requeue(it)), remove());
+  else if (it.status === 'exists') box.append(textBtn(tr('Заменить'), tr('Заменить файл {0} на читалке', it.name), () => { it.overwrite = true; requeue(it); }), remove());
+  else if (it.status === 'queued') box.append(remove());
+}
+function updateBar(it) {
+  const p = percent(it);
+  const bar = it.row.querySelector('.bar');
+  bar.querySelector('i').style.width = p + '%';
+  bar.setAttribute('aria-valuenow', p);
+}
+function removeItem(it) {
+  queue.splice(queue.indexOf(it), 1);
+  it.row.remove();
+  renderQueue();
+}
+function requeue(it) {
+  it.status = 'queued';
+  it.sent = 0;
+  it.note = '';
+  updateRow(it);
+  renderQueue();
+  run();
+}
+const count = (s) => queue.filter((q) => q.status === s).length;
+function renderQueue() {
+  const has = queue.length > 0;
+  $('#empty').hidden = has;
+  $('#queue').hidden = !has;
+  $('#queueHead').hidden = !has;
+  // The main action is picking files until there is something to upload.
+  const pick = $('#pickBtn');
+  // Shrinks to a plus only when "Upload" needs the room.
+  const pending = count('queued') > 0;
+  pick.classList.toggle('btn-primary', !pending);
+  pick.classList.toggle('btn-outline', pending);
+  pick.classList.toggle('pick-icon-only', pending);
+  $('#queueTitle').textContent = tr('Очередь · {0}', queue.length);
+  $('#clearDone').hidden = !count('done') || runner.active;
+  const waiting = count('queued') + count('uploading');
+  $('#tabCount').hidden = !waiting;
+  $('#tabCount').textContent = waiting;
+  renderBar();
+}
+function renderBar() {
+  const q = count('queued');
+  const running = runner.active;
+  const online = reader.state === 'online';
+  const onUpload = tab === 'upload';
+  $('#actionRun').hidden = !running || !onUpload;
+  $('#startBtn').hidden = running || !q || !onUpload;
+  $('#startBtn').disabled = !online;
+  $('#startBtn').textContent = tr('Загрузить {0}', files(q));
+  $('#action').hidden = !onUpload;
+  $('#actionButtons').hidden = !onUpload || running;
+  if (running) {
+    const total = runner.total;
+    $('#runText').textContent = tr('Загружаем {0} из {1}', Math.min(runner.index, total), total);
+  }
+  $('#pickBtn').disabled = false;
+}
+$('#clearDone').addEventListener('click', () => {
+  for (const it of queue.filter((q) => q.status === 'done')) { it.row.remove(); queue.splice(queue.indexOf(it), 1); }
+  renderQueue();
+});
+
+/* ---------- Upload ---------- */
+class UploadError extends Error {
+  constructor(kind, message = '') { super(message); this.kind = kind; }
+}
+const SERVER_ERRORS = [
+  [/already exists/i, 'exists', ''],
+  [/already in progress/i, 'busy', tr('Читалка занята другой загрузкой. Подождите немного и повторите.')],
+  [/disk full|write failed/i, 'server', tr('Не удалось записать файл. Возможно, карта памяти заполнена.')],
+  [/failed to create/i, 'server', tr('Не удалось создать файл. Проверьте карту памяти и название папки.')],
+  [/invalid file name|invalid start/i, 'server', tr('Читалка не принимает такое имя файла. Переименуйте его и повторите.')],
+  [/protected/i, 'server', tr('В эту папку загружать нельзя. Выберите другую.')],
+];
+function mapServerError(text) {
+  for (const [re, kind, msg] of SERVER_ERRORS) if (re.test(text)) return new UploadError(kind, msg);
+  return new UploadError('server', tr('Читалка сообщила об ошибке. Попробуйте ещё раз.'));
+}
+
+function uploadWs(it) {
+  return new Promise((resolve, reject) => {
+    const ws = new WebSocket(wsUrl());
+    ws.binaryType = 'arraybuffer';
+    let opened = false, settled = false, acked = 0, stallTimer = 0;
+    const clearStall = () => clearTimeout(stallTimer);
+    const armStall = (ms = STALL_MS) => {
+      clearStall();
+      stallTimer = setTimeout(() => finish(new UploadError('lost')), ms);
+    };
+    function finish(err) {
+      if (settled) return;
+      settled = true;
+      clearStall();
+      it.abort = null;
+      try { ws.close(); } catch { /* already closed */ }
+      err ? reject(err) : resolve();
+    }
+    it.abort = () => finish(new UploadError('cancel'));
+    armStall(6000);
+
+    async function sendAll() {
+      let offset = 0;
+      try {
+        while (offset < it.size && !settled) {
+          const end = Math.min(offset + CHUNK, it.size);
+          const buf = await it.file.slice(offset, end).arrayBuffer();
+          while (!settled && ws.readyState === WebSocket.OPEN && (ws.bufferedAmount > MAX_BUFFERED || offset - acked > ACK_WINDOW)) await sleep(5);
+          if (settled || ws.readyState !== WebSocket.OPEN) return;
+          ws.send(buf);
+          offset = end;
+          it.sent = offset;
+          onProgress(it);
+        }
+      } catch { finish(new UploadError('read')); }
+    }
+    ws.onopen = () => { opened = true; armStall(); ws.send(`START:${it.name}:${it.size}:${it.dest}`); };
+    ws.onerror = () => {};
+    ws.onclose = () => finish(new UploadError(opened ? 'lost' : 'connect'));
+    ws.onmessage = (e) => {
+      if (typeof e.data !== 'string') return;
+      armStall();
+      if (e.data === 'READY') sendAll();
+      // Each PROGRESS confirms another 64 KB; counting them doesn't depend on how the number is printed.
+      else if (e.data.startsWith('PROGRESS:')) acked += 65536;
+      else if (e.data === 'DONE') finish();
+      else if (e.data.startsWith('ERROR:')) finish(mapServerError(e.data.slice(6)));
+    };
+  });
+}
+// Used when the WebSocket port is unavailable, and to replace an existing file:
+// WebSocket uploads never overwrite, POST /upload?overwrite=1 does.
+function uploadHttp(it) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const q = `path=${encodeURIComponent(it.dest)}${it.overwrite ? '&overwrite=1' : ''}`;
+    xhr.open('POST', `${reader.base}/upload?${q}`);
+    let stall = 0;
+    const arm = () => { clearTimeout(stall); stall = setTimeout(() => xhr.abort(), STALL_MS); };
+    let cancelled = false;
+    it.abort = () => { cancelled = true; xhr.abort(); };
+    xhr.upload.onprogress = (e) => { arm(); it.sent = e.loaded; onProgress(it); };
+    xhr.onload = () => {
+      clearTimeout(stall);
+      it.abort = null;
+      if (xhr.status >= 200 && xhr.status < 300) resolve();
+      else reject(mapServerError(xhr.responseText || ''));
+    };
+    const fail = () => { clearTimeout(stall); it.abort = null; reject(new UploadError(cancelled ? 'cancel' : 'lost')); };
+    xhr.onerror = fail;
+    xhr.onabort = fail;
+    const fd = new FormData();
+    fd.append('file', it.file, it.name);
+    arm();
+    xhr.send(fd);
+  });
+}
+let lastPaint = 0;
+function onProgress(it) {
+  const now = performance.now();
+  if (now - lastPaint < 120 && it.sent < it.size) return;
+  lastPaint = now;
+  updateRow(it);
+}
+async function transfer(it) {
+  if (it.overwrite) return uploadHttp(it);
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await uploadWs(it);
+    } catch (err) {
+      // A cancelled upload can take a moment to clear on the reader.
+      if (err.kind === 'busy' && attempt < 3) { await sleep(1500); continue; }
+      if (err.kind === 'connect') return uploadHttp(it);
+      throw err;
+    }
+  }
+}
+async function uploadOne(it) {
+  it.status = 'uploading';
+  it.sent = 0;
+  it.note = '';
+  updateRow(it);
+  try {
+    await transfer(it);
+    it.status = 'done';
+    it.overwrite = false;
+    it.sent = it.size;
+    dev.stale = true;
+    announce(tr('Загружено: {0}', it.name));
+  } catch (err) {
+    it.sent = 0;
+    if (err.kind === 'cancel') {
+      it.status = 'cancelled';
+      announce(tr('Отменено: {0}', it.name));
+    } else if (err.kind === 'exists') {
+      it.status = 'exists';
+      announce(tr('Файл {0} уже есть на читалке', it.name));
+    } else if (err.kind === 'lost' || err.kind === 'connect') {
+      const alive = await fetchStatus(reader.base);
+      if (alive) {
+        it.status = 'error';
+        it.error = tr('Связь прервалась. Незаконченный файл удалён, можно повторить.');
+        announce(tr('Ошибка: {0}', it.name));
+      } else {
+        // Keep the rest of the queue: everything continues once the reader is back.
+        it.status = 'queued';
+        it.note = tr('связь прервалась, начнётся заново');
+        runner.stop = true;
+        setConn('offline');
+      }
+    } else if (err.kind === 'read') {
+      it.status = 'error';
+      it.error = tr('Не удалось прочитать файл на iPhone. Выберите его заново.');
+    } else {
+      it.status = 'error';
+      it.error = err.message;
+      announce(tr('Ошибка: {0}', it.name));
+    }
+  }
+  updateRow(it);
+}
+async function run() {
+  if (runner.active || reader.state !== 'online') return;
+  clearTimeout(reader.timer);
+  runner.active = true;
+  runner.stop = false;
+  runner.index = 0;
+  runner.total = count('queued');
+  let sleepSent = false;
+  renderQueue();
+  if (queue.some((q) => q.status === 'queued' && q.dest === SLEEP_DIR)) {
+    // Fails harmlessly when the folder already exists.
+    try { await fetch(reader.base + '/mkdir', { method: 'POST', body: new URLSearchParams({ name: SLEEP_DIR.slice(1), path: '/' }) }); } catch { /* the upload reports it */ }
+  }
+  for (;;) {
+    const it = queue.find((q) => q.status === 'queued');
+    if (!it || runner.stop) break;
+    runner.index++;
+    runner.total = runner.index + count('queued') - 1;
+    runner.current = it;
+    renderBar();
+    if (it.convert && !(await prepareSleep(it))) continue;
+    await uploadOne(it);
+    if (it.dest === SLEEP_DIR && it.status === 'done') sleepSent = true;
+    // One upload at a time: let the reader free its socket before the next one.
+    await sleep(250);
+  }
+  runner.active = false;
+  runner.current = null;
+  renderQueue();
+  if (sleepSent) await useCustomSleep();
+  if (tab === 'home' || tab === 'covers') refreshSettings();
+  const done = count('done');
+  if (!count('queued') && done) announce(tr('Готово. Загружено: {0}', files(done)));
+  check();
+}
+$('#startBtn').addEventListener('click', run);
+$('#stopBtn').addEventListener('click', () => {
+  runner.stop = true;
+  if (runner.current && runner.current.abort) runner.current.abort();
+});
+
+/* ---------- Reader settings ---------- */
+const QUICK_RESUME = 6; // SLEEP_SCREEN_MODE::QUICK_RESUME in the firmware
+const VIEWS = { wifi: tr('Wi‑Fi-сети'), fonts: tr('Шрифты') };
+const set = { items: null, error: false, view: 'root', token: 0, pending: {}, timer: 0, saving: false, quickAuto: false, extra: 0 };
+const findSetting = (k) => (set.items || []).find((x) => x.key === k);
+const node = (tag, cls, text) => {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+};
+const iconBtn = (name, aria, fn) => {
+  const b = node('button', 'icon-btn');
+  b.type = 'button';
+  b.innerHTML = icon(name);
+  b.setAttribute('aria-label', aria);
+  b.addEventListener('click', fn);
+  return b;
+};
+let toastTimer = 0;
+function toast(text, bad) {
+  const t = $('#toast');
+  t.textContent = text;
+  t.dataset.bad = bad ? '1' : '';
+  t.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.hidden = true; }, bad ? 4500 : 1500);
+}
+// Only what is worth changing from the phone. Everything else stays on the reader's own settings page.
+const SETTING_SECTIONS = [
+  { name: tr('Экран'), keys: ['sleepTimeoutMinutes', 'screenInverted', 'refreshFrequency', 'hideBatteryPercentage'] },
+  {
+    name: tr('Чтение'),
+    keys: ['fontFamily', 'fontSize', 'lineHeight', 'wordSpacing', 'characterSpacing', 'screenMargin', 'paragraphAlignment', 'embeddedStyle', 'focusReadingEnabled', 'hyphenationEnabled', 'orientation', 'extraParagraphSpacing', 'paragraphIndentSpaces', 'textAntiAliasing'],
+    tail: { title: tr('Внизу страницы'), keys: ['statusBarChapterPageCount', 'statusBarBookProgressPercentage', 'statusBarProgressBar', 'statusBarTitle', 'statusBarBattery'] },
+  },
+  { name: tr('Кнопки'), keys: ['sideButtonLayout', 'longPressButtonBehavior', 'shortPwrBtn'] },
+];
+function queueSetting(key, value) {
+  set.pending[key] = value;
+  clearTimeout(set.timer);
+  set.timer = setTimeout(flushSettings, 450);
+}
+async function flushSettings() {
+  // The reader handles one thing at a time: never save during an upload or another save.
+  if (set.saving || runner.active) { set.timer = setTimeout(flushSettings, 700); return; }
+  const body = set.pending;
+  if (!Object.keys(body).length) return;
+  set.pending = {};
+  set.saving = true;
+  try {
+    const r = await fetch(reader.base + '/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (!r.ok || /Applied 0/.test(await r.text())) throw new Error('rejected');
+    toast(tr('Сохранено'));
+    announce(tr('Настройка сохранена'));
+  } catch {
+    toast(tr('Не сохранилось. Проверьте связь с читалкой.'), true);
+    announce(tr('Настройка не сохранилась'));
+    set.saving = false;
+    loadSettings();
+    return;
+  }
+  set.saving = false;
+}
+function changeSetting(it, value) {
+  it.value = value;
+  queueSetting(it.key, value);
+  let redraw = it.key === 'sleepScreen';
+  // Same coupling as the reader's own settings page.
+  const q = findSetting('quickResumeSleepScreen');
+  if (it.key === 'sleepScreen' && q) {
+    if (value === QUICK_RESUME && q.value !== 1) {
+      q.value = 1;
+      queueSetting(q.key, 1);
+      set.quickAuto = true;
+      redraw = true;
+    } else if (value !== QUICK_RESUME && set.quickAuto) {
+      q.value = 0;
+      queueSetting(q.key, 0);
+      set.quickAuto = false;
+      redraw = true;
+    }
+  }
+  if (it.key === 'quickResumeSleepScreen') set.quickAuto = false;
+  if (redraw) renderCovers();
+}
+function settingRow(it) {
+  const li = node('li', 'row setting');
+  const main = node('div', 'row-main');
+  main.append(node('div', 'row-name', it.name));
+  li.append(main);
+  if (it.type === 'toggle') {
+    const label = node('label', 'switch');
+    label.innerHTML = '<input type="checkbox" role="switch"><i></i>';
+    const box = label.querySelector('input');
+    box.checked = !!it.value;
+    box.setAttribute('aria-label', it.name);
+    box.addEventListener('change', () => changeSetting(it, box.checked ? 1 : 0));
+    li.append(label);
+  } else if (it.type === 'enum') {
+    const shown = node('span', 'setting-value', it.options[it.value] || '');
+    const select = node('select');
+    select.setAttribute('aria-label', it.name);
+    it.options.forEach((o, i) => { const op = node('option', '', o); op.value = i; select.append(op); });
+    select.value = it.value;
+    select.addEventListener('change', () => {
+      const v = Number(select.value);
+      shown.textContent = it.options[v];
+      changeSetting(it, v);
+    });
+    li.append(shown, select);
+  } else if (it.type === 'value') {
+    const wrap = node('div', 'stepper');
+    const out = node('output', '', it.value);
+    const step = (dir) => {
+      const v = Math.min(it.max, Math.max(it.min, it.value + dir * it.step));
+      if (v === it.value) return;
+      out.textContent = v;
+      changeSetting(it, v);
+      minus.disabled = v <= it.min;
+      plus.disabled = v >= it.max;
+      announce(`${it.name}: ${v}`);
+    };
+    const minus = iconBtn('minus', tr('Уменьшить: {0}', it.name), () => step(-1));
+    const plus = iconBtn('plus', tr('Увеличить: {0}', it.name), () => step(1));
+    minus.disabled = it.value <= it.min;
+    plus.disabled = it.value >= it.max;
+    wrap.append(minus, out, plus);
+    li.append(wrap);
+  } else if (it.type === 'string') {
+    li.classList.add('tall');
+    const secret = 'hasPassword' in it;
+    const row = node('div', 'form-row');
+    const input = node('input', 'input');
+    input.type = secret ? 'password' : 'text';
+    input.value = it.value || '';
+    input.autocapitalize = 'none';
+    input.autocomplete = 'off';
+    input.spellcheck = false;
+    input.setAttribute('aria-label', it.name);
+    if (secret) input.placeholder = it.hasPassword ? tr('Задано, оставьте пустым') : tr('Не задано');
+    input.addEventListener('change', () => {
+      if (secret) {
+        if (!input.value) return;
+        queueSetting(it.key, input.value);
+        it.hasPassword = true;
+        renderCategory();
+      } else {
+        it.value = input.value;
+        queueSetting(it.key, input.value);
+      }
+    });
+    row.append(input);
+    if (secret && it.hasPassword) {
+      const clear = node('button', 'btn btn-outline', tr('Очистить'));
+      clear.type = 'button';
+      clear.addEventListener('click', () => { queueSetting(it.key, ''); it.hasPassword = false; renderCategory(); });
+      row.append(clear);
+    }
+    li.append(row);
+  }
+  return li;
+}
+function navRow(title, fn) {
+  const li = node('li');
+  const b = node('button', 'row-tap');
+  b.innerHTML = '<span class="grow"></span><svg class="i chev" aria-hidden="true"><use href="#i-chev"/></svg>';
+  b.querySelector('.grow').textContent = title;
+  b.addEventListener('click', fn);
+  li.append(b);
+  return li;
+}
+function setView(v) {
+  set.view = v;
+  window.scrollTo(0, 0);
+  renderSettings();
+  if (v === 'wifi') loadCrud(v);
+  if (v === 'fonts') loadFonts();
+}
+function languageRow() {
+  const li = node('li', 'row setting');
+  const main = node('div', 'row-main');
+  main.append(node('div', 'row-name', tr('Язык приложения')));
+  const names = { en: 'English', ru: 'Русский' };
+  const shown = node('span', 'setting-value', names[LANG]);
+  const select = node('select');
+  select.setAttribute('aria-label', tr('Язык приложения'));
+  for (const [code, label] of Object.entries(names)) { const o = node('option', '', label); o.value = code; select.append(o); }
+  select.value = LANG;
+  select.addEventListener('change', () => { store.set('lang', select.value); location.reload(); });
+  li.append(main, shown, select);
+  return li;
+}
+function renderCategory() {
+  const ul = $('#setList');
+  ul.textContent = '';
+  const name = set.view.slice(4);
+  const section = SETTING_SECTIONS.find((x) => x.name === name);
+  const rows = (keys) => keys.map(findSetting).filter(Boolean).map(settingRow);
+  ul.setAttribute('aria-label', name);
+  ul.append(...rows(section.keys));
+  if (section.tail) {
+    const tail = rows(section.tail.keys);
+    if (tail.length) ul.append(node('li', 'row-group', section.tail.title), ...tail);
+  }
+}
+function renderSettings() {
+  const v = set.view;
+  const online = reader.state === 'online';
+  const extra = v === 'wifi' || v === 'fonts';
+  const box = $('#setState');
+  const ready = online && !!set.items && !runner.active;
+  $('#setNav').hidden = v === 'root';
+  $('#setNavTitle').textContent = v.startsWith('cat:') ? v.slice(4) : VIEWS[v] || '';
+  $('#setRoot').hidden = !(ready && v === 'root');
+  $('#setList').hidden = !(ready && v.startsWith('cat:'));
+  $('#viewExtra').hidden = !(ready && extra);
+  box.textContent = '';
+  const dummy = node('ul');
+  if (!online) {
+    setState(box, dummy, 'msg', { title: tr('Настройки недоступны'), text: tr('Они появятся, когда читалка снова будет на связи.') });
+  } else if (runner.active) {
+    setState(box, dummy, 'msg', { title: tr('Идёт загрузка книг'), text: tr('Настройки откроются, когда она закончится.'), retry: refreshSettings });
+  } else if (!set.items) {
+    if (set.error) setState(box, dummy, 'msg', { title: tr('Не удалось загрузить настройки'), text: tr('Читалка не ответила. Проверьте, что на ней открыта «Передача файлов».'), retry: loadSettings });
+    else setState(box, dummy, 'loading');
+  } else if (ready && v === 'root') {
+    const ul = $('#setRoot');
+    ul.textContent = '';
+    ul.append(languageRow());
+    for (const { name } of SETTING_SECTIONS) ul.append(navRow(name, () => setView('cat:' + name)));
+    for (const k of ['fonts', 'wifi']) ul.append(navRow(VIEWS[k], () => setView(k)));
+  } else if (ready && v.startsWith('cat:')) {
+    renderCategory();
+  }
+  renderCovers();
+  renderBar();
+}
+// Your own kinds come first. Previews are frames captured from the firmware, in covers.png.
+const COVER_ORDER = [9, 10, 11, 3, 4, 2, 8, 6, 5]; // Dark, Light and Transparent only show the CrossPoint logo
+const COVER_SYSTEM = [9, 10, 11]; // Reading Map, Time Left, Battery Level cannot be removed
+// Your own pictures live on the card in /sleep. Blobs are kept so a redraw does not download them again.
+const coverPics = { list: [], urls: new Map(), token: 0 };
+function hiddenCovers() {
+  try { return new Set(JSON.parse(store.get('hiddenCovers') || '[]')); } catch { return new Set(); }
+}
+function saveHiddenCovers(hidden) {
+  store.set('hiddenCovers', JSON.stringify([...hidden]));
+  renderCovers();
+}
+async function loadCoverPics() {
+  const token = ++coverPics.token;
+  if (reader.state !== 'online' || runner.active) return;
+  let items = [];
+  try { items = await listDir(SLEEP_DIR); } catch { /* no folder yet */ }
+  if (token !== coverPics.token) return;
+  coverPics.list = items.filter((i) => !i.isDirectory && extOf(i.name) === 'bmp').map((i) => `${SLEEP_DIR}/${i.name}`);
+  renderCovers();
+  for (const pic of coverPics.list) {
+    if (coverPics.urls.has(pic)) continue;
+    try {
+      const r = await fetch(`${reader.base}/download?path=${encodeURIComponent(pic)}`, { cache: 'no-store' });
+      if (!r.ok) continue;
+      const url = URL.createObjectURL(await r.blob());
+      if (token !== coverPics.token) { URL.revokeObjectURL(url); return; }
+      coverPics.urls.set(pic, url);
+      for (const img of document.querySelectorAll('#coversGrid img[data-pic]')) if (img.dataset.pic === pic) img.src = url;
+    } catch { return; }
+  }
+}
+async function deleteCoverPic(pic) {
+  if (!(await askConfirm(tr('Удалить эту обложку с читалки?')))) return;
+  try {
+    const r = await fetch(reader.base + '/delete', { method: 'POST', body: new URLSearchParams({ path: pic }) });
+    if (!r.ok) throw new Error(String(r.status));
+    coverPics.list = coverPics.list.filter((x) => x !== pic);
+    if (coverPics.urls.has(pic)) URL.revokeObjectURL(coverPics.urls.get(pic));
+    coverPics.urls.delete(pic);
+    toast(tr('Обложка удалена'));
+    renderCovers();
+  } catch { toast(tr('Не удалось удалить. Проверьте связь с читалкой.'), true); }
+}
+function coverDelete(name, fn) {
+  const b = node('button', 'cover-del');
+  b.type = 'button';
+  b.innerHTML = icon('x');
+  b.setAttribute('aria-label', tr('Удалить: {0}', name));
+  b.addEventListener('click', fn);
+  return b;
+}
+function coverPicTile(pic) {
+  const li = node('li');
+  const shot = node('div', 'cover-shot is-pic');
+  const img = node('img');
+  img.alt = tr('Своя обложка');
+  img.dataset.pic = pic;
+  if (coverPics.urls.has(pic)) img.src = coverPics.urls.get(pic);
+  shot.append(img);
+  li.append(shot, node('span', 'cover-name', tr('Своя обложка')), coverDelete(tr('Своя обложка'), () => deleteCoverPic(pic)));
+  return li;
+}
+function coverCard(sleep, mode) {
+  const li = node('li');
+  const selected = sleep.value === mode;
+  const b = node('button', 'cover-card');
+  b.type = 'button';
+  b.setAttribute('aria-pressed', selected ? 'true' : 'false');
+  const shot = node('span', 'cover-shot');
+  // Frames are 240x400, inset 2px in the cells of a 244x404 grid (732x1616 image).
+  shot.style.backgroundPosition = `${(mode % 3) * 49.593 + 0.407}% ${Math.floor(mode / 3) * 33.224 + 0.164}%`;
+  if (selected) {
+    const tick = node('span', 'cover-tick');
+    tick.innerHTML = icon('check');
+    shot.append(tick);
+  }
+  b.append(shot, node('span', 'cover-name', sleep.options[mode]));
+  b.addEventListener('click', () => { if (sleep.value !== mode) changeSetting(sleep, mode); });
+  li.append(b);
+  // The kind in use stays: removing it would hide what the reader is showing.
+  if (!selected && !COVER_SYSTEM.includes(mode)) {
+    li.append(coverDelete(sleep.options[mode], async () => {
+      if (!(await askConfirm(tr('Убрать «{0}» из списка?', sleep.options[mode])))) return;
+      const h = hiddenCovers();
+      h.add(mode);
+      saveHiddenCovers(h);
+    }));
+  }
+  return li;
+}
+function renderCovers() {
+  if (tab !== 'covers') return;
+  const grid = $('#coversGrid');
+  const box = $('#coversState');
+  const sleep = set.items && findSetting('sleepScreen');
+  if (reader.state !== 'online') {
+    setState(box, grid, 'msg', { title: tr('Обложки недоступны'), text: tr('Они появятся, когда читалка снова будет на связи.') });
+  } else if (runner.active) {
+    setState(box, grid, 'msg', { title: tr('Идёт загрузка книг'), text: tr('Настройки откроются, когда она закончится.') });
+  } else if (!sleep) {
+    if (set.error) setState(box, grid, 'msg', { title: tr('Обложки недоступны'), text: tr('Читалка не ответила. Проверьте, что на ней открыта «Передача файлов».'), retry: refreshSettings });
+    else setState(box, grid, 'loading');
+  } else {
+    setState(box, grid, 'list');
+    grid.textContent = '';
+    const hidden = hiddenCovers();
+    const modes = COVER_ORDER.filter((m) => m < sleep.options.length && (!hidden.has(m) || m === sleep.value));
+    const tiles = [
+      ...modes.filter((m) => COVER_SYSTEM.includes(m)).map((m) => ({ mode: m })),
+      ...coverPics.list.map((pic) => ({ pic })),
+      ...modes.filter((m) => !COVER_SYSTEM.includes(m)).map((m) => ({ mode: m })),
+    ];
+    for (const t of tiles) grid.append(t.pic ? coverPicTile(t.pic) : coverCard(sleep, t.mode));
+    const removed = [...hidden].filter((m) => !modes.includes(m)).length;
+    if (removed) {
+      const li = node('li', 'cover-restore');
+      const back = node('button', 'link', tr('Вернуть убранные: {0}', removed));
+      back.type = 'button';
+      back.addEventListener('click', () => saveHiddenCovers(new Set()));
+      li.append(back);
+      grid.append(li);
+    }
+  }
+}
+async function loadSettings() {
+  const token = ++set.token;
+  set.error = false;
+  if (reader.state !== 'online' || runner.active) { renderSettings(); return; }
+  if (!set.items) renderSettings();
+  const c = new AbortController();
+  const t = setTimeout(() => c.abort(), 15000);
+  try {
+    const r = await fetch(reader.base + '/api/settings', { cache: 'no-store', signal: c.signal });
+    if (!r.ok) throw new Error(String(r.status));
+    const items = await r.json();
+    if (token !== set.token) return;
+    set.items = items;
+  } catch {
+    if (token !== set.token) return;
+    set.items = null;
+    set.error = true;
+  } finally { clearTimeout(t); }
+  renderSettings();
+}
+async function refreshSettings() {
+  await loadSettings();
+  if (reader.state !== 'online' || runner.active) return;
+  if (tab === 'covers') loadCoverPics();
+  if (set.view === 'wifi') loadCrud(set.view);
+  if (set.view === 'fonts') loadFonts();
+}
+$('#setBack').addEventListener('click', () => setView('root'));
+
+/* Saved Wi-Fi networks and OPDS catalogs share one list-and-form screen. */
+const CRUD = {
+  wifi: {
+    url: '/api/wifi', del: '/api/wifi/delete', title: (i) => i.ssid,
+    sub: (i) => (i.isLastConnected ? tr('Подключались последней') : i.hasPassword ? tr('С паролем') : tr('Без пароля')),
+    empty: tr('Сохранённых сетей нет'), add: tr('Новая сеть'), edit: tr('Изменить сеть'), remove: tr('Удалить сеть'),
+    fields: [{ k: 'ssid', label: tr('Название сети (только 2,4 ГГц)'), req: true }, { k: 'password', label: tr('Пароль'), pw: true }],
+  },
+};
+async function loadCrud(kind) {
+  const token = ++set.extra;
+  const cfg = CRUD[kind];
+  const box = $('#viewExtra');
+  box.textContent = '';
+  const st = node('div');
+  box.append(st);
+  setState(st, node('ul'), 'loading');
+  try {
+    const r = await fetch(reader.base + cfg.url, { cache: 'no-store' });
+    if (!r.ok) throw new Error(String(r.status));
+    const items = await r.json();
+    if (token === set.extra && set.view === kind) renderCrud(kind, items, null);
+  } catch {
+    if (token === set.extra && set.view === kind) setState(st, node('ul'), 'msg', { title: tr('Не удалось загрузить список'), text: tr('Читалка не ответила.'), retry: () => loadCrud(kind) });
+  }
+}
+async function postJson(url, body) {
+  const r = await fetch(reader.base + url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  return { ok: r.ok, text: await r.text() };
+}
+function renderCrud(kind, items, editing) {
+  const cfg = CRUD[kind];
+  const box = $('#viewExtra');
+  box.textContent = '';
+  if (items.length) {
+    const ul = node('ul', 'list');
+    items.forEach((it) => {
+      const li = node('li');
+      const row = node('div', 'row-file');
+      const b = node('button', 'row-edit');
+      b.type = 'button';
+      b.append(node('span', '', cfg.title(it)), node('small', '', cfg.sub(it)));
+      b.setAttribute('aria-label', `${cfg.edit}: ${cfg.title(it)}`);
+      b.addEventListener('click', () => { renderCrud(kind, items, it); window.scrollTo(0, 0); });
+      row.append(b, iconBtn('trash', `${cfg.remove}: ${cfg.title(it)}`, async () => {
+        if (!(await askConfirm(tr('{0} «{1}»?', cfg.remove, cfg.title(it))))) return;
+        try {
+          const res = await postJson(cfg.del, { index: it.index });
+          toast(res.ok ? tr('Удалено') : tr('Не удалось удалить.'), !res.ok);
+        } catch { toast(tr('Нет связи с читалкой.'), true); }
+        loadCrud(kind);
+      }));
+      li.append(row);
+      ul.append(li);
+    });
+    box.append(ul);
+  } else {
+    const st = node('div');
+    setState(st, node('ul'), 'msg', { title: cfg.empty, text: tr('Заполните форму ниже, чтобы добавить.') });
+    box.append(st);
+  }
+  const form = node('form', 'card');
+  form.append(node('h2', 'form-title', editing ? cfg.edit : cfg.add));
+  const inputs = {};
+  for (const f of cfg.fields) {
+    const label = node('label', 'field');
+    const input = node('input', 'input');
+    input.type = f.pw ? 'password' : 'text';
+    input.autocomplete = 'off';
+    input.spellcheck = false;
+    if (f.url) input.inputMode = 'url';
+    if (f.url || f.pw || f.plain) input.autocapitalize = 'none';
+    if (f.pw && editing) input.placeholder = tr('Оставьте пустым, чтобы не менять');
+    if (editing && !f.pw) input.value = editing[f.k] || '';
+    inputs[f.k] = input;
+    label.append(node('span', '', f.label), input);
+    form.append(label);
+  }
+  const err = node('p', 'err-text');
+  err.hidden = true;
+  err.setAttribute('role', 'alert');
+  const save = node('button', 'btn btn-primary btn-wide', tr('Сохранить'));
+  form.append(err, save);
+  if (editing) {
+    const cancel = node('button', 'link', tr('Отменить изменение'));
+    cancel.type = 'button';
+    cancel.addEventListener('click', () => renderCrud(kind, items, null));
+    form.append(cancel);
+  }
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const body = editing ? { index: editing.index } : {};
+    for (const f of cfg.fields) {
+      const v = f.pw ? inputs[f.k].value : inputs[f.k].value.trim();
+      if (f.req && !v) { err.textContent = tr('Заполните поле «{0}».', f.label); err.hidden = false; return; }
+      if (f.pw && !v && editing) continue;
+      body[f.k] = v;
+    }
+    err.hidden = true;
+    save.disabled = true;
+    try {
+      const res = await postJson(cfg.url, body);
+      if (res.ok) { toast(tr('Сохранено')); loadCrud(kind); return; }
+      err.textContent = /limit/i.test(res.text) ? tr('Достигнут предел: сначала удалите лишнее.') : tr('Читалка не приняла эти данные.');
+    } catch { err.textContent = tr('Нет связи с читалкой.'); }
+    err.hidden = false;
+    save.disabled = false;
+  });
+  box.append(form);
+}
+
+/* Fonts */
+async function loadFonts() {
+  const token = ++set.extra;
+  const box = $('#viewExtra');
+  box.textContent = '';
+  const st = node('div');
+  box.append(st);
+  setState(st, node('ul'), 'loading');
+  try {
+    const r = await fetch(reader.base + '/api/fonts', { cache: 'no-store' });
+    if (!r.ok) throw new Error(String(r.status));
+    const data = await r.json();
+    if (token === set.extra && set.view === 'fonts') renderFonts(data);
+  } catch {
+    if (token === set.extra && set.view === 'fonts') setState(st, node('ul'), 'msg', { title: tr('Не удалось загрузить шрифты'), text: tr('Читалка не ответила.'), retry: loadFonts });
+  }
+}
+function renderFonts(data) {
+  const box = $('#viewExtra');
+  box.textContent = '';
+  const families = data.families || [];
+  if (families.length) {
+    const ul = node('ul', 'list');
+    ul.setAttribute('aria-label', tr('Установленные шрифты'));
+    for (const f of families) {
+      const li = node('li');
+      const row = node('div', 'row-file');
+      const info = node('div', 'row-edit');
+      const sizes = (f.sizes || []).filter((x) => x > 0);
+      info.append(node('span', '', f.name), node('small', '', sizes.length ? tr('{0} пт', sizes.join(', ')) : tr('Все размеры')));
+      row.append(info, iconBtn('trash', tr('Удалить шрифт {0}', f.name), async () => {
+        if (!(await askConfirm(tr('Удалить шрифт «{0}»?', f.name)))) return;
+        try {
+          const res = await postJson('/api/fonts/delete', { family: f.name });
+          toast(res.ok ? tr('Удалено') : tr('Не удалось удалить.'), !res.ok);
+        } catch { toast(tr('Нет связи с читалкой.'), true); }
+        loadFonts();
+      }));
+      li.append(row);
+      ul.append(li);
+    }
+    box.append(ul);
+  } else {
+    const st = node('div');
+    setState(st, node('ul'), 'msg', { title: tr('Своих шрифтов нет'), text: tr('Читалка использует встроенные шрифты.') });
+    box.append(st);
+  }
+  const re = data.vectorFonts ? /\.(cpfont|ttf|otf)$/i : /\.cpfont$/i;
+  const input = node('input', 'sr');
+  input.type = 'file';
+  input.multiple = true;
+  input.tabIndex = -1;
+  input.setAttribute('aria-hidden', 'true');
+  const status = node('p', 'note center');
+  status.setAttribute('role', 'status');
+  const add = node('button', 'btn btn-outline btn-wide', tr('Добавить шрифт'));
+  add.type = 'button';
+  add.addEventListener('click', () => input.click());
+  input.addEventListener('change', async () => {
+    const picked = [...input.files].filter((f) => re.test(f.name));
+    input.value = '';
+    if (!picked.length) { status.textContent = data.vectorFonts ? tr('Нужны файлы .cpfont, .ttf или .otf.') : tr('Нужны файлы .cpfont.'); return; }
+    // Same naming as the reader's own Fonts page: Bookerly_12.cpfont belongs to family Bookerly.
+    const familyOf = (name) => {
+      const stem = name.replace(/\.(cpfont|ttf|otf)$/i, '');
+      const cut = Math.max(stem.lastIndexOf('-'), stem.lastIndexOf('_'));
+      return (cut > 0 ? stem.slice(0, cut) : stem).replace(/[^A-Za-z0-9_-]/g, '_');
+    };
+    if (new Set(picked.map((f) => familyOf(f.name))).size > 1) { status.textContent = tr('Выберите файлы одного шрифта.'); return; }
+    add.disabled = true;
+    let failed = 0;
+    for (let i = 0; i < picked.length; i++) {
+      status.textContent = tr('Загружаем {0} из {1}…', i + 1, picked.length);
+      const fd = new FormData();
+      fd.append('family', familyOf(picked[i].name));
+      fd.append('file', picked[i], picked[i].name);
+      try {
+        const r = await fetch(reader.base + '/api/fonts/upload', { method: 'POST', body: fd });
+        if (!r.ok) failed++;
+      } catch { failed++; }
+    }
+    toast(failed ? tr('Не загрузилось файлов: {0}', failed) : tr('Шрифт загружен'), !!failed);
+    loadFonts();
+  });
+  box.append(add, input, status, node('p', 'note center', data.vectorFonts ? tr('Подойдут файлы .cpfont, .ttf и .otf.') : tr('Подойдут файлы .cpfont. Если файлов несколько, все должны быть от одного шрифта.')));
+}
+
+/* ---------- Book reviews ---------- */
+// Stored on the card, not in the browser: browser data is tied to the address the page was opened from.
+const rev = { have: new Set(), book: null, token: 0 };
+const reviewDir = () => `/${reader.served ? location.pathname.split('/')[1] : 'book-uploader'}/reviews`;
+const reviewFile = (bookPath) => safeName(bookPath.slice(1).replace(/\//g, '__')) + '.json';
+const reviewUrl = (bookPath) => reader.base + `${reviewDir()}/${reviewFile(bookPath)}`.split('/').map(encodeURIComponent).join('/');
+async function listReviews() {
+  try {
+    return new Set((await listDir(reviewDir())).filter((i) => !i.isDirectory).map((i) => i.name));
+  } catch { return new Set(); }
+}
+async function readReview(bookPath) {
+  if (!rev.have.has(reviewFile(bookPath))) return '';
+  const r = await fetch(reviewUrl(bookPath), { cache: 'no-store' });
+  if (!r.ok) throw new Error(String(r.status));
+  return (await r.json()).text || '';
+}
+async function writeReview(book, text) {
+  const file = reviewFile(book.path);
+  if (!text) {
+    if (!rev.have.has(file)) return;
+    const r = await fetch(reader.base + '/delete', { method: 'POST', body: new URLSearchParams({ path: `${reviewDir()}/${file}` }) });
+    if (!r.ok) throw new Error(String(r.status));
+    rev.have.delete(file);
+    return;
+  }
+  if (!rev.have.size) await fetch(reader.base + '/mkdir', { method: 'POST', body: new URLSearchParams({ name: 'reviews', path: parentOf(reviewDir()) }) });
+  const fd = new FormData();
+  fd.append('file', new Blob([JSON.stringify({ book: book.path, title: book.title, text, updated: new Date().toISOString() })], { type: 'application/json' }), file);
+  const r = await fetch(`${reader.base}/upload?path=${encodeURIComponent(reviewDir())}&overwrite=1`, { method: 'POST', body: fd });
+  if (!r.ok) throw new Error(String(r.status));
+  rev.have.add(file);
+}
+// Reviews save themselves shortly after typing stops; a failed save is retried on the next change or on close.
+const reviewSaver = { timer: 0, busy: false, pending: null };
+function queueReview(book, text, report) {
+  reviewSaver.pending = { book, text, report };
+  clearTimeout(reviewSaver.timer);
+  reviewSaver.timer = setTimeout(flushReview, 700);
+}
+async function flushReview() {
+  clearTimeout(reviewSaver.timer);
+  if (!reviewSaver.pending) return;
+  if (reviewSaver.busy || runner.active) { reviewSaver.timer = setTimeout(flushReview, 700); return; }
+  const job = reviewSaver.pending;
+  reviewSaver.pending = null;
+  reviewSaver.busy = true;
+  try {
+    await writeReview(job.book, job.text.trim());
+    job.report('');
+  } catch {
+    if (!reviewSaver.pending) reviewSaver.pending = job;
+    job.report(tr('Не удалось сохранить. Проверьте, что на читалке открыта «Передача файлов», и повторите.'));
+  } finally { reviewSaver.busy = false; }
+}
+function reviewError(text) {
+  const e = $('#reviewErr');
+  e.textContent = text;
+  e.hidden = !text;
+}
+async function openReview(bookPath, title) {
+  const token = ++rev.token;
+  const area = $('#reviewText');
+  rev.book = { path: bookPath, title };
+  $('#reviewBook').textContent = title;
+  area.value = '';
+  area.disabled = true;
+  reviewError('');
+  $('#reviewDelete').hidden = !rev.have.has(reviewFile(bookPath));
+  $('#review').showModal();
+  try {
+    const text = await readReview(bookPath);
+    if (token !== rev.token) return;
+    area.value = text;
+    area.disabled = false;
+  } catch {
+    // Stays locked: an empty form here would wipe the review on the card.
+    if (token === rev.token) reviewError(tr('Не удалось открыть рецензию. Проверьте связь с читалкой.'));
+  }
+  if (token === rev.token) loadShots('#reviewShots', rev.book);
+}
+$('#reviewClose').addEventListener('click', () => $('#review').close());
+$('#review').addEventListener('close', () => { rev.token++; rev.book = null; flushReview().then(renderDevItems); });
+$('#reviewText').addEventListener('input', (e) => queueReview(rev.book, e.target.value, reviewError));
+$('#reviewDelete').addEventListener('click', async () => {
+  if (!(await askConfirm(tr('Удалить рецензию на эту книгу?')))) return;
+  reviewError('');
+  reviewSaver.pending = null;
+  try {
+    await writeReview(rev.book, '');
+    toast(tr('Рецензия удалена'));
+    $('#review').close();
+  } catch { reviewError(tr('Не удалось удалить. Проверьте связь с читалкой.')); }
+});
+
+/* ---------- Shelf ---------- */
+// The reader's second page draws shelf.json as arranged here. "read" and "unread" always exist.
+const BUILTIN_SHELVES = ['read', 'unread'];
+const shelf = { shelves: null, cur: store.get('shelfCur') || 'read', timer: 0, saving: false, dirty: false, edit: null };
+const shelfFile = () => `${parentOf(reviewDir())}/shelf.json`;
+const encodePath = (p) => p.split('/').map(encodeURIComponent).join('/');
+const currentYm = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; };
+function monthLabel(ym, withYear) {
+  if (!ym) return '';
+  const [y, m] = ym.split('-').map(Number);
+  const opts = withYear ? { month: 'long', year: 'numeric' } : { month: 'short' };
+  return new Date(y, m - 1).toLocaleString(LANG === 'en' ? 'en-US' : 'ru-RU', opts).replace('.', '');
+}
+const isBuiltin = (sh) => BUILTIN_SHELVES.includes(sh.id);
+const curShelf = () => shelf.shelves.find((x) => x.id === shelf.cur) || shelf.shelves[0];
+const shelfTitle = (sh) => sh.name || (sh.id === 'read' ? tr('Прочитано') : tr('Не прочитано'));
+function normalizeShelves(data) {
+  const list = Array.isArray(data.shelves) ? data.shelves.filter((x) => x && x.id && Array.isArray(x.items)) : [];
+  for (const id of BUILTIN_SHELVES) if (!list.some((x) => x.id === id)) list.push({ id, name: '', items: [] });
+  // Older files had one flat list with a status on each book.
+  if (Array.isArray(data.items)) {
+    for (const it of data.items) {
+      const read = (it.status || (it.finished ? 'read' : 'unread')) === 'read';
+      list.find((x) => x.id === (read ? 'read' : 'unread')).items.push({ path: it.path, title: it.title, author: it.author || '', finished: it.finished || '' });
+    }
+  }
+  return [...BUILTIN_SHELVES.map((id) => list.find((x) => x.id === id)), ...list.filter((x) => !BUILTIN_SHELVES.includes(x.id))];
+}
+async function loadShelf() {
+  if (shelf.dirty) return;
+  try {
+    const r = await fetch(reader.base + encodePath(shelfFile()), { cache: 'no-store' });
+    if (r.status === 404) { shelf.shelves = normalizeShelves({}); return; }
+    if (!r.ok) throw new Error(String(r.status));
+    shelf.shelves = normalizeShelves(await r.json());
+  } catch { /* keep what we have: unknown shelves must not be overwritten by empty ones */ }
+}
+function moveShelfItem(i, delta) {
+  const items = curShelf().items;
+  const j = i + delta;
+  if (j < 0 || j >= items.length) return;
+  const [it] = items.splice(i, 1);
+  items.splice(j, 0, it);
+  shelfChanged();
+  announce(tr('{0}: место {1} из {2}', it.title, j + 1, items.length));
+}
+// Flat cover colours; a book keeps its colour because it comes from the path.
+const COVER_COLORS = ['#1f3a5f', '#7a3b2e', '#2f5d50', '#5e4570', '#7d6232', '#34495e', '#7b2d43', '#2c5a78'];
+function coverColor(p) {
+  let h = 0;
+  for (const ch of p) h = (h * 31 + ch.codePointAt(0)) % 9973;
+  return COVER_COLORS[h % COVER_COLORS.length];
+}
+function startGridDrag(e, card, onEnd) {
+  e.preventDefault();
+  const grip = e.currentTarget;
+  const grid = card.parentElement;
+  const startX = e.clientX;
+  const startY = e.clientY;
+  const baseLeft = card.offsetLeft;
+  const baseTop = card.offsetTop;
+  grip.setPointerCapture(e.pointerId);
+  card.classList.add('dragging');
+  const place = (ev) => {
+    card.style.transform = `translate(${ev.clientX - startX - (card.offsetLeft - baseLeft)}px, ${ev.clientY - startY - (card.offsetTop - baseTop)}px)`;
+  };
+  const move = (ev) => {
+    const over = document.elementsFromPoint(ev.clientX, ev.clientY).map((n) => n.closest('.shelf-card')).find((c) => c && c !== card && c.parentElement === grid);
+    if (over) {
+      const cards = [...grid.children];
+      const from = cards.indexOf(card);
+      const to = cards.indexOf(over);
+      // Shift the neighbours, never the dragged card: moving it would drop the pointer capture.
+      for (let k = 0; k < Math.abs(to - from); k++) {
+        if (to > from) grid.insertBefore(card.nextElementSibling, card);
+        else grid.insertBefore(card.previousElementSibling, card.nextElementSibling);
+      }
+    }
+    place(ev);
+  };
+  const end = () => {
+    grip.removeEventListener('pointermove', move);
+    grip.removeEventListener('pointerup', end);
+    grip.removeEventListener('pointercancel', end);
+    card.classList.remove('dragging');
+    card.style.transform = '';
+    onEnd();
+  };
+  grip.addEventListener('pointermove', move);
+  grip.addEventListener('pointerup', end);
+  grip.addEventListener('pointercancel', end);
+}
+function applyShelfOrder() {
+  const order = [...$('#shelfList').children].map((x) => x.dataset.path);
+  curShelf().items.sort((a, c) => order.indexOf(a.path) - order.indexOf(c.path));
+  shelfChanged();
+}
+function shelfExtras(li, it, i, total) {
+  for (const [delta, word] of [[-1, tr('выше')], [1, tr('ниже')]]) {
+    if (i + delta < 0 || i + delta >= total) continue;
+    const mv = node('button', 'sr', tr('Поставить {0} {1}', it.title, word));
+    mv.addEventListener('click', () => moveShelfItem(i, delta));
+    li.append(mv);
+  }
+  const grip = node('span', 'grip');
+  grip.setAttribute('aria-hidden', 'true');
+  grip.innerHTML = '<svg class="i"><use href="#i-grip"/></svg>';
+  grip.addEventListener('pointerdown', (e) => startGridDrag(e, li, applyShelfOrder));
+  li.append(grip);
+}
+const shelfDateLabel = (it) => (curShelf().id === 'read' ? monthLabel(it.finished) : '');
+function shelfRow(it, i, total) {
+  const li = node('li', 'shelf-card');
+  li.dataset.path = it.path;
+  const b = node('button', 'shelf-cover');
+  b.type = 'button';
+  b.style.background = coverColor(it.path);
+  b.append(node('b', '', it.title), node('small', '', it.author || ''));
+  b.setAttribute('aria-label', tr('Изменить: {0}', it.title));
+  b.addEventListener('click', () => openShelfEdit(it));
+  li.append(b, node('span', 'shelf-month', shelfDateLabel(it)));
+  shelfExtras(li, it, i, total);
+  return li;
+}
+function renderShelf() {
+  const known = shelf.shelves !== null;
+  $('#shelfBox').hidden = !known;
+  if (!known) return;
+  const sh = curShelf();
+  const chips = $('#shelfChips');
+  chips.textContent = '';
+  for (const x of shelf.shelves) {
+    const c = node('button', 'shelf-chip', shelfTitle(x));
+    c.setAttribute('aria-pressed', x === sh ? 'true' : 'false');
+    if (x === sh) c.setAttribute('aria-label', tr('Переименовать полку {0}', shelfTitle(x)));
+    // Tapping the open shelf renames it; tapping another one opens it.
+    c.addEventListener('click', () => {
+      if (x === sh) { startShelfRename(); return; }
+      shelf.cur = x.id;
+      store.set('shelfCur', x.id);
+      renderShelf();
+    });
+    chips.append(c);
+  }
+  const ul = $('#shelfList');
+  ul.textContent = '';
+  sh.items.forEach((it, i) => ul.append(shelfRow(it, i, sh.items.length)));
+  $('#shelfDelete').hidden = isBuiltin(sh);
+  if (sh.items.length) setState($('#shelfEmpty'), ul, 'list');
+  else setState($('#shelfEmpty'), ul, 'msg', { title: tr('На этой полке пока нет книг'), text: tr('Нажмите + на книге ниже, чтобы поставить её сюда.') });
+  for (const b of document.querySelectorAll('#devList [data-shelf]')) paintToggle(b);
+}
+function shelfChanged() {
+  shelf.dirty = true;
+  renderShelf();
+  clearTimeout(shelf.timer);
+  shelf.timer = setTimeout(saveShelf, 500);
+}
+async function saveShelf() {
+  if (shelf.saving || runner.active) { shelf.timer = setTimeout(saveShelf, 700); return; }
+  shelf.saving = true;
+  try {
+    const fd = new FormData();
+    fd.append('file', new Blob([JSON.stringify({ version: 2, shelves: shelf.shelves })], { type: 'application/json' }), 'shelf.json');
+    const r = await fetch(`${reader.base}/upload?path=${encodeURIComponent(parentOf(reviewDir()))}&overwrite=1`, { method: 'POST', body: fd });
+    if (!r.ok) throw new Error(String(r.status));
+    shelf.dirty = false;
+    toast(tr('Полка сохранена'));
+  } catch {
+    // Still marked dirty, so the next change saves everything again.
+    toast(tr('Не удалось сохранить полку. Проверьте связь с читалкой.'), true);
+  } finally { shelf.saving = false; }
+}
+const onCurrentShelf = (bookPath) => !!shelf.shelves && curShelf().items.some((i) => i.path === bookPath);
+function paintToggle(b) {
+  const on = onCurrentShelf(b.dataset.shelf);
+  b.innerHTML = icon(on ? 'check' : 'plus');
+  b.setAttribute('aria-label', tr(on ? 'Убрать {0} с полки' : 'Поставить {0} на полку', b.dataset.name));
+  b.setAttribute('aria-pressed', on ? 'true' : 'false');
+}
+function newShelfItem(bookPath, fileName, read) {
+  const known = shelf.shelves.flatMap((x) => x.items).find((x) => x.path === bookPath);
+  return { path: bookPath, title: known ? known.title : fileName.replace(/\.[^.]+$/, '').slice(0, 60), author: known ? known.author : '', finished: read ? (known && known.finished) || currentYm() : '' };
+}
+function shelfToggle(bookPath, fileName) {
+  const b = node('button', 'icon-btn add-shelf');
+  b.type = 'button';
+  b.dataset.shelf = bookPath;
+  b.dataset.name = fileName;
+  paintToggle(b);
+  b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (shelf.shelves === null) return;
+    const sh = curShelf();
+    const i = sh.items.findIndex((x) => x.path === bookPath);
+    if (i >= 0) {
+      sh.items.splice(i, 1);
+      announce(tr('Убрано с полки'));
+    } else {
+      sh.items.unshift(newShelfItem(bookPath, fileName, sh.id === 'read'));
+      // A book is either read or not read, never both.
+      if (isBuiltin(sh)) {
+        const other = shelf.shelves.find((x) => isBuiltin(x) && x !== sh);
+        other.items = other.items.filter((x) => x.path !== bookPath);
+      }
+      announce(tr('Добавлено на полку'));
+    }
+    shelfChanged();
+  });
+  return b;
+}
+function devCard(it) {
+  const li = node('li', 'shelf-card');
+  const ext = extOf(it.name);
+  const bookPath = it.path;
+  const cover = node('button', 'shelf-cover');
+  cover.style.background = coverColor(bookPath);
+  cover.append(node('b', '', it.name.replace(/\.[^.]+$/, '')), node('small', '', `${ext.toUpperCase()} · ${fmtSize(it.size)}`));
+  li.append(cover);
+  const has = rev.have.has(reviewFile(bookPath));
+  if (has) li.append(node('span', 'shelf-month', tr('Есть рецензия')));
+  cover.setAttribute('aria-label', `${it.name}. ${has ? tr('Открыть рецензию') : tr('Написать рецензию')}`);
+  cover.addEventListener('click', () => openReview(bookPath, it.name));
+  li.append(shelfToggle(bookPath, it.name));
+  return li;
+}
+function renderDevItems() {
+  if (dev.items === null) return;
+  const ul = $('#devList');
+  ul.className = 'shelf-grid';
+  ul.textContent = '';
+  for (const it of dev.items) ul.append(devCard(it));
+  if (dev.items.length) setState($('#devState'), ul, 'list');
+  else setState($('#devState'), ul, 'msg', { title: tr('Здесь пока пусто'), text: tr('Загрузите сюда книги на вкладке «Загрузка».') });
+}
+function syncShelfStatus() {
+  const read = $('#shelfStatus').value === 'read';
+  const builtin = isBuiltin(curShelf());
+  $('#shelfStatusField').hidden = !builtin;
+  $('#shelfMonthField').hidden = !builtin || !read;
+  if (read && builtin && !$('#shelfMonth').value) $('#shelfMonth').value = currentYm();
+}
+function openShelfEdit(it) {
+  shelf.edit = it;
+  $('#shelfTitle').value = it.title;
+  $('#shelfAuthor').value = it.author || '';
+  $('#shelfErr').hidden = true;
+  const sel = $('#shelfMonth');
+  sel.textContent = '';
+  const none = node('option', '', tr('Без даты'));
+  none.value = '';
+  sel.append(none);
+  const now = new Date();
+  for (let k = 0; k < 36; k++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - k);
+    const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const op = node('option', '', monthLabel(ym, true));
+    op.value = ym;
+    sel.append(op);
+  }
+  // A month older than the list still has to stay selectable.
+  if (it.finished && ![...sel.options].some((o) => o.value === it.finished)) {
+    const op = node('option', '', monthLabel(it.finished, true));
+    op.value = it.finished;
+    sel.append(op);
+  }
+  sel.value = it.finished || '';
+  $('#shelfStatus').value = curShelf().id === 'read' ? 'read' : 'unread';
+  syncShelfStatus();
+  $('#shelfEdit').showModal();
+  loadShelfReview(it).then(() => { if (shelf.edit === it) loadShots('#shelfShots', it); });
+}
+function shelfError(text) {
+  const e = $('#shelfErr');
+  e.textContent = text;
+  e.hidden = !text;
+}
+async function loadShelfReview(it) {
+  const token = ++rev.token;
+  const area = $('#shelfReview');
+  area.value = '';
+  area.disabled = true;
+  try {
+    const text = await readReview(it.path);
+    if (token !== rev.token) return;
+    area.value = text;
+    area.disabled = false;
+  } catch {
+    if (token === rev.token) shelfError(tr('Не удалось открыть рецензию. Проверьте связь с читалкой.'));
+  }
+}
+// Every field saves itself; there is nothing to confirm.
+function applyShelfEdit() {
+  const it = shelf.edit;
+  if (!it) return;
+  const title = $('#shelfTitle').value.trim();
+  const author = $('#shelfAuthor').value.trim();
+  shelfError(title ? '' : tr('Введите название книги.'));
+  for (const x of shelf.shelves.flatMap((sh) => sh.items)) {
+    if (x.path === it.path) Object.assign(x, { title: title || x.title, author });
+  }
+  const owner = shelf.shelves.find((x) => isBuiltin(x) && x.items.includes(it));
+  if (owner) {
+    const target = $('#shelfStatus').value;
+    it.finished = target === 'read' ? $('#shelfMonth').value : '';
+    if (target !== owner.id) {
+      owner.items.splice(owner.items.indexOf(it), 1);
+      shelf.shelves.find((x) => x.id === target).items.unshift(it);
+    }
+  }
+  shelfChanged();
+}
+$('#shelfStatus').addEventListener('change', () => { syncShelfStatus(); applyShelfEdit(); });
+$('#shelfMonth').addEventListener('change', applyShelfEdit);
+$('#shelfTitle').addEventListener('input', applyShelfEdit);
+$('#shelfAuthor').addEventListener('input', applyShelfEdit);
+$('#shelfReview').addEventListener('input', (e) => queueReview({ path: shelf.edit.path, title: shelf.edit.title }, e.target.value, shelfError));
+$('#shelfEdit').addEventListener('close', () => { rev.token++; shelf.edit = null; flushReview().then(renderDevItems); });
+function startShelfRename() {
+  const input = $('#shelfNameInput');
+  input.value = shelfTitle(curShelf());
+  $('#shelfChips').hidden = true;
+  input.hidden = false;
+  input.focus();
+  input.select();
+}
+let shelfRenameCancelled = false;
+$('#shelfNameInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') e.target.blur();
+  if (e.key === 'Escape') { shelfRenameCancelled = true; e.target.blur(); }
+});
+$('#shelfNameInput').addEventListener('blur', (e) => {
+  const value = e.target.value.trim();
+  e.target.hidden = true;
+  $('#shelfChips').hidden = false;
+  const sh = curShelf();
+  shelfRenameDone: {
+    if (shelfRenameCancelled) break shelfRenameDone;
+    const next = isBuiltin(sh) && (!value || value === shelfTitle({ id: sh.id })) ? '' : value || sh.name;
+    if (next !== sh.name) { sh.name = next; shelfChanged(); }
+  }
+  shelfRenameCancelled = false;
+});
+$('#shelfEditClose').addEventListener('click', () => $('#shelfEdit').close());
+$('#shelfRemove').addEventListener('click', () => {
+  const sh = shelf.shelves.find((x) => x.items.includes(shelf.edit));
+  sh.items.splice(sh.items.indexOf(shelf.edit), 1);
+  $('#shelfEdit').close();
+  announce(tr('Убрано с полки'));
+  shelfChanged();
+});
+$('#shelfDelete').addEventListener('click', async () => {
+  const sh = curShelf();
+  if (isBuiltin(sh) || !(await askConfirm(tr('Удалить полку «{0}»?', shelfTitle(sh))))) return;
+  shelf.shelves.splice(shelf.shelves.indexOf(sh), 1);
+  shelf.cur = 'read';
+  store.set('shelfCur', 'read');
+  toast(tr('Полка удалена'));
+  shelfChanged();
+});
+
+/* New shelf: pick from every book on the card. */
+const NOT_BOOK_DIRS = ['fonts', 'sleep', 'covers', 'screenshots', 'book-uploader'];
+async function findBooks(dir, depth, out) {
+  for (const it of await listDir(dir)) {
+    if (it.isDirectory) {
+      if (depth === 0 && NOT_BOOK_DIRS.includes(it.name.toLowerCase())) continue;
+      if (depth < 6) await findBooks(joinPath(dir, it.name), depth + 1, out);
+    } else if (BOOK_FORMATS.includes(extOf(it.name)) && extOf(it.name) !== 'bmp') {
+      out.push({ path: joinPath(dir, it.name), name: it.name, size: it.size });
+    }
+  }
+  return out;
+}
+async function fillShelfPicker() {
+  const list = $('#shelfNewList');
+  const state = $('#shelfNewState');
+  list.textContent = '';
+  list.hidden = true;
+  state.textContent = '';
+  state.append(node('p', 'note center', tr('Ищем книги на карте…')));
+  try {
+    const books = await findBooks('/', 0, []);
+    if (!$('#shelfNew').open) return;
+    state.textContent = '';
+    if (!books.length) {
+      setState(state, node('ul'), 'msg', { title: tr('На карте нет книг'), text: tr('Сначала загрузите книги на вкладке «Загрузка».') });
+      return;
+    }
+    for (const b of books) {
+      const row = node('label', 'pick-row');
+      const box = node('input');
+      box.type = 'checkbox';
+      box.dataset.path = b.path;
+      box.dataset.name = b.name;
+      row.append(box, node('span', 'grow', b.name.replace(/\.[^.]+$/, '')));
+      list.append(row);
+    }
+    list.hidden = false;
+  } catch {
+    setState(state, node('ul'), 'msg', { title: tr('Не удалось найти книги'), text: tr('Читалка не ответила. Попробуйте ещё раз.'), retry: fillShelfPicker });
+  }
+}
+$('#shelfAdd').addEventListener('click', () => {
+  $('#shelfNewName').value = '';
+  $('#shelfNewErr').hidden = true;
+  $('#shelfNew').showModal();
+  fillShelfPicker();
+});
+$('#shelfNewClose').addEventListener('click', () => $('#shelfNew').close());
+$('#shelfNewCreate').addEventListener('click', () => {
+  const name = $('#shelfNewName').value.trim();
+  if (!name) { $('#shelfNewErr').textContent = tr('Введите название полки.'); $('#shelfNewErr').hidden = false; return; }
+  const id = 's' + Date.now();
+  const items = [...document.querySelectorAll('#shelfNewList input:checked')].map((b) => newShelfItem(b.dataset.path, b.dataset.name, false));
+  shelf.shelves.push({ id, name, items });
+  shelf.cur = id;
+  store.set('shelfCur', id);
+  $('#shelfNew').close();
+  toast(tr('Полка создана'));
+  shelfChanged();
+});
+
+addEventListener('pointerdown', () => { document.documentElement.dataset.pointer = '1'; }, true);
+addEventListener('keydown', (e) => { if (e.key === 'Tab') delete document.documentElement.dataset.pointer; }, true);
+
+/* ---------- Reading an EPUB ---------- */
+// Only the book's own title is needed, to find its screenshots folder.
+let epubBusy = false;
+function readZip(buf) {
+  const v = new DataView(buf);
+  let end = buf.byteLength - 22;
+  while (end >= 0 && v.getUint32(end, true) !== 0x06054b50) end--;
+  if (end < 0) throw new Error('not a zip');
+  const names = new TextDecoder();
+  const entries = new Map();
+  let p = v.getUint32(end + 16, true);
+  for (let i = v.getUint16(end + 10, true); i > 0; i--) {
+    if (v.getUint32(p, true) !== 0x02014b50) throw new Error('bad zip');
+    const nameLen = v.getUint16(p + 28, true);
+    const name = names.decode(new Uint8Array(buf, p + 46, nameLen));
+    entries.set(name, { method: v.getUint16(p + 10, true), size: v.getUint32(p + 20, true), offset: v.getUint32(p + 42, true) });
+    p += 46 + nameLen + v.getUint16(p + 30, true) + v.getUint16(p + 32, true);
+  }
+  return entries;
+}
+async function zipBytes(epub, name) {
+  const e = epub.entries.get(name);
+  if (!e) throw new Error('missing ' + name);
+  const v = new DataView(epub.buf);
+  const start = e.offset + 30 + v.getUint16(e.offset + 26, true) + v.getUint16(e.offset + 28, true);
+  const data = epub.buf.slice(start, start + e.size);
+  if (e.method === 0) return data;
+  if (e.method !== 8) throw new Error('unsupported compression');
+  return new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer();
+}
+async function zipText(epub, name) {
+  const bytes = await zipBytes(epub, name);
+  const head = new TextDecoder('latin1').decode(bytes.slice(0, 200));
+  const label = (/encoding=["']([\w-]+)["']/i.exec(head) || [])[1] || 'utf-8';
+  try { return new TextDecoder(label).decode(bytes); } catch { return new TextDecoder().decode(bytes); }
+}
+const parseXml = (text) => new DOMParser().parseFromString(text, 'application/xml');
+const allTags = (doc, name) => [...doc.getElementsByTagNameNS('*', name)];
+async function downloadBook(bookPath) {
+  // A big download keeps the reader busy, so status checks wait for it.
+  epubBusy = true;
+  try {
+    const r = await fetch(`${reader.base}/download?path=${encodeURIComponent(bookPath)}`, { cache: 'no-store' });
+    if (!r.ok) throw new Error(String(r.status));
+    return await r.arrayBuffer();
+  } finally {
+    epubBusy = false;
+    check();
+  }
+}
+
+/* ---------- Screenshots ---------- */
+// The reader saves them to /screenshots/<book title from its metadata>/, up to 63 bytes of the title.
+const shots = { token: 0 };
+const nameKey = (t) => t.normalize('NFC').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+function shotDir(dirs, titles) {
+  for (const title of titles) {
+    const key = nameKey(title || '');
+    if (!key) continue;
+    const dir = dirs.find((d) => {
+      const k = nameKey(d);
+      return k && (k === key || (new TextEncoder().encode(d).length >= 55 && key.startsWith(k)));
+    });
+    if (dir) return dir;
+  }
+  return '';
+}
+// A renamed file or shelf title no longer matches the folder; the EPUB's own title always does.
+async function epubTitle(bookPath) {
+  let saved = {};
+  try { saved = JSON.parse(store.get('epubTitles') || '{}'); } catch { /* starts empty */ }
+  if (bookPath in saved) return saved[bookPath];
+  const buf = await downloadBook(bookPath);
+  const epub = { buf, entries: readZip(buf) };
+  const rootfile = allTags(parseXml(await zipText(epub, 'META-INF/container.xml')), 'rootfile')[0];
+  const opf = parseXml(await zipText(epub, rootfile.getAttribute('full-path')));
+  const title = (allTags(opf, 'title')[0] || { textContent: '' }).textContent.trim();
+  saved[bookPath] = title;
+  store.set('epubTitles', JSON.stringify(saved));
+  return title;
+}
+const shotOrder = (name) => {
+  const m = /_ch(\d+)_p(\d+)_/.exec(name) || /_()p(\d+)_/.exec(name) || [];
+  return Number(m[1] || 0) * 1e5 + Number(m[2] || 0);
+};
+async function bookShots(book) {
+  const dirs = (await listDir('/screenshots')).filter((i) => i.isDirectory).map((i) => i.name);
+  if (!dirs.length) return [];
+  const stem = book.path.split('/').pop().replace(/\.[^.]+$/, '');
+  let dir = shotDir(dirs, [book.title, stem]);
+  if (!dir && extOf(book.path) === 'epub') dir = shotDir(dirs, [await epubTitle(book.path)]);
+  if (!dir) return [];
+  return (await listDir('/screenshots/' + dir))
+    .filter((i) => !i.isDirectory && extOf(i.name) === 'bmp')
+    .sort((x, y) => shotOrder(x.name) - shotOrder(y.name))
+    .map((i) => ({ path: `/screenshots/${dir}/${i.name}`, pct: (/_(\d+)pct_/.exec(i.name) || [])[1] }));
+}
+function clearShots(box) {
+  for (const img of box.querySelectorAll('img')) URL.revokeObjectURL(img.src);
+  box.querySelector('.shot-grid').textContent = '';
+  box.hidden = true;
+}
+async function loadShots(selector, book) {
+  const token = ++shots.token;
+  const box = $(selector);
+  clearShots(box);
+  if (reader.state !== 'online' || runner.active) return;
+  try {
+    const files = await bookShots(book);
+    if (token !== shots.token) return;
+    box.hidden = !files.length;
+    // One at a time: the reader handles a single request well, several badly.
+    for (const file of files) {
+      const r = await fetch(`${reader.base}/download?path=${encodeURIComponent(file.path)}`, { cache: 'no-store' });
+      if (!r.ok) continue;
+      const url = URL.createObjectURL(await r.blob());
+      if (token !== shots.token) { URL.revokeObjectURL(url); return; }
+      const b = node('button', 'shot');
+      b.type = 'button';
+      b.setAttribute('aria-label', file.pct ? `${tr('Скриншот')}, ${file.pct}%` : tr('Скриншот'));
+      const img = node('img');
+      img.alt = '';
+      img.src = url;
+      b.append(img);
+      if (file.pct) b.append(node('span', '', `${file.pct}%`));
+      b.addEventListener('click', () => { $('#shotViewImg').src = url; $('#shotView').showModal(); });
+      box.querySelector('.shot-grid').append(b);
+    }
+  } catch { /* the rest of the sheet works without screenshots */ }
+}
+$('#shotViewClose').addEventListener('click', () => $('#shotView').close());
+for (const [dialog, box] of [['#shelfEdit', '#shelfShots'], ['#review', '#reviewShots']]) {
+  $(dialog).addEventListener('close', () => { shots.token++; clearShots($(box)); });
+}
+
+/* ---------- Tabs ---------- */
+let tab = 'upload';
+function selectTab(name) {
+  tab = name;
+  for (const b of document.querySelectorAll('.tab')) {
+    if (b.dataset.tab === name) b.setAttribute('aria-current', 'page');
+    else b.removeAttribute('aria-current');
+  }
+  $('#tab-upload').hidden = name !== 'upload';
+  $('#tab-device').hidden = name !== 'device';
+  $('#tab-home').hidden = name !== 'home';
+  $('#tab-covers').hidden = name !== 'covers';
+  $('#title').textContent = { upload: tr('Загрузка'), device: tr('Полка'), home: tr('Настройки'), covers: tr('Обложки') }[name];
+  window.scrollTo(0, 0);
+  renderBar();
+  if (name === 'device') loadDevice();
+  if (name === 'home' || name === 'covers') refreshSettings();
+}
+for (const b of document.querySelectorAll('.tab')) b.addEventListener('click', () => selectTab(b.dataset.tab));
+
+/* ---------- Start ---------- */
+if (navigator.standalone === false && !store.get('tipClosed')) $('#tip').hidden = false;
+$('#tipClose').addEventListener('click', () => { $('#tip').hidden = true; store.set('tipClosed', '1'); });
+renderUploadKind();
+renderQueue();
+check();
+</script>
+</body>
+</html>
